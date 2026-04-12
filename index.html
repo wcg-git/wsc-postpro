@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WSC Post-Production Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- ─────────────────────────────────────────────────────────────
+     SUPABASE CONFIG — replace both values with your project's
+     URL and anon key from: supabase.com → project → Settings → API
+───────────────────────────────────────────────────────────────── -->
+<script>
+  const SUPABASE_URL      = 'https://jhzlwwsvqldhmzqluypu.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoemx3d3N2cWxkaG16cWx1eXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTAzODUsImV4cCI6MjA5MTU2NjM4NX0.gspAUAxMwA-N8V71BlADbmdC9THa5yT6MrjTgJI2YBo';
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+  :root {
+    --teal: #2ABCD4;
+    --teal-light: #56C5E0;
+    --teal-dim: rgba(42,188,212,0.12);
+    --purple: #7532B6;
+    --purple-light: #9B5FD6;
+    --purple-dim: rgba(117,50,182,0.15);
+    --bg: #0A0A10;
+    --bg-card: #111118;
+    --bg-section: #13131C;
+    --bg-hover: #1A1A28;
+    --border: #1E1E30;
+    --border-light: #2A2A40;
+    --text: #E8E8F0;
+    --text-muted: #7070A0;
+    --text-dim: #4A4A70;
+    --white: #FFFFFF;
+    --red: #E05555;
+    --orange: #E09240;
+    --green: #2ECC71;
+    --yellow: #F0D060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 12px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0D0D18 0%, #110E1F 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-badge {
+    background: linear-gradient(135deg, var(--teal), var(--purple));
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    color: #fff;
+    letter-spacing: 0.05em;
+  }
+  .header-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--white);
+    letter-spacing: 0.02em;
+  }
+  .header-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+  }
+  .header-right { display: flex; gap: 12px; align-items: center; }
+
+  /* ── SYNC INDICATOR ── */
+  .sync-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    padding: 5px 10px;
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    background: rgba(255,255,255,0.03);
+  }
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-dim);
+    transition: background 0.3s;
+    flex-shrink: 0;
+  }
+  .sync-dot.connected { background: var(--green); box-shadow: 0 0 6px rgba(46,204,113,0.5); animation: pulse 2s infinite; }
+  .sync-dot.syncing   { background: var(--yellow); }
+  .sync-dot.error     { background: var(--red); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  /* ── STATS BAR ── */
+  .stats-bar {
+    display: flex;
+    gap: 0;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .stat-item {
+    flex: 1;
+    min-width: 120px;
+    padding: 14px 20px;
+    border-right: 1px solid var(--border);
+    text-align: center;
+  }
+  .stat-item:last-child { border-right: none; }
+  .stat-value {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1;
+    margin-bottom: 4px;
+    transition: color 0.3s;
+  }
+  .stat-label { font-size: 10px; color: var(--text-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+  .sv-teal   { color: var(--teal); }
+  .sv-purple { color: var(--purple-light); }
+  .sv-red    { color: var(--red); }
+  .sv-green  { color: var(--green); }
+  .sv-orange { color: var(--orange); }
+  .sv-white  { color: var(--white); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    padding: 12px 28px;
+    background: var(--bg-section);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .controls label { font-size: 11px; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; }
+  .ctrl-select {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+  }
+  .ctrl-select:focus { border-color: var(--teal); }
+  .ctrl-divider { width: 1px; height: 24px; background: var(--border); margin: 0 4px; }
+  .ctrl-btn {
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.03em;
+  }
+  .ctrl-btn:hover, .ctrl-btn.active { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.25s;
+    pointer-events: none;
+    border: 1px solid transparent;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.success { background: rgba(46,204,113,0.15); color: var(--green); border-color: rgba(46,204,113,0.3); }
+  .toast.error   { background: rgba(224,82,85,0.15);  color: var(--red);   border-color: rgba(224,82,85,0.3); }
+  .toast.info    { background: rgba(42,188,212,0.12); color: var(--teal);  border-color: rgba(42,188,212,0.25); }
+
+  /* ── MAIN ── */
+  .main { padding: 24px 28px; max-width: 1600px; }
+
+  /* ── BATCH SECTION ── */
+  .batch-section { margin-bottom: 20px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: var(--bg-card); }
+  .batch-header { display: flex; align-items: center; padding: 14px 20px; cursor: pointer; user-select: none; gap: 14px; border-bottom: 1px solid var(--border); transition: background 0.15s; }
+  .batch-header:hover { background: var(--bg-hover); }
+  .batch-header.rush   { border-left: 3px solid var(--red); }
+  .batch-header.batch2 { border-left: 3px solid var(--teal); }
+  .batch-header.batch3 { border-left: 3px solid var(--purple-light); }
+  .batch-header.batch4 { border-left: 3px solid var(--orange); }
+  .batch-header.batch5 { border-left: 3px solid var(--yellow); }
+
+  .batch-toggle { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; width: 16px; }
+  .batch-toggle.open { transform: rotate(90deg); }
+
+  .batch-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; color: var(--white); flex-shrink: 0; }
+  .batch-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+  .batch-chip { font-size: 10px; padding: 3px 8px; border-radius: 20px; letter-spacing: 0.04em; font-weight: 500; }
+  .bc-deadline { background: rgba(224,82,85,0.15); color: var(--red); border: 1px solid rgba(224,82,85,0.3); }
+  .bc-air      { background: rgba(42,188,212,0.1); color: var(--teal); border: 1px solid rgba(42,188,212,0.25); }
+  .bc-editor   { background: rgba(117,50,182,0.15); color: var(--purple-light); border: 1px solid rgba(117,50,182,0.3); }
+  .bc-warn     { background: rgba(240,208,96,0.1); color: var(--yellow); border: 1px solid rgba(240,208,96,0.25); }
+
+  .batch-progress-area { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .progress-text { font-size: 11px; color: var(--text-muted); white-space: nowrap; }
+  .progress-bar-wrap { width: 100px; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .progress-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--teal), var(--purple-light)); transition: width 0.4s ease; }
+
+  /* ── TABLE ── */
+  .batch-body { overflow: hidden; transition: all 0.2s; }
+  .batch-body.collapsed { display: none; }
+
+  .ep-table { width: 100%; border-collapse: collapse; }
+  .ep-table thead tr { background: rgba(30,30,48,0.8); border-bottom: 1px solid var(--border); }
+  .ep-table th { padding: 8px 12px; text-align: left; font-size: 10px; color: var(--text-dim); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 500; white-space: nowrap; }
+  .ep-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  .ep-table tbody tr:last-child { border-bottom: none; }
+  .ep-table tbody tr:hover { background: var(--bg-hover); }
+  .ep-table td { padding: 10px 12px; vertical-align: middle; }
+  .ep-row.hidden { display: none; }
+
+  /* ── CELLS ── */
+  .ep-num { color: var(--text-dim); font-size: 11px; width: 36px; }
+  .ep-name { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 13px; color: var(--white); white-space: nowrap; }
+  .ep-note { font-size: 10px; color: var(--text-muted); margin-top: 2px; letter-spacing: 0.02em; }
+  .date-cell { white-space: nowrap; font-size: 11px; }
+  .date-val  { color: var(--text); }
+  .date-past { color: var(--text-dim); }
+
+  /* Days chip */
+  .days-chip { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 10px; font-weight: 600; letter-spacing: 0.03em; white-space: nowrap; }
+  .days-ok   { background: rgba(46,204,113,0.12); color: var(--green);  border: 1px solid rgba(46,204,113,0.25); }
+  .days-warn { background: rgba(224,146,64,0.12); color: var(--orange); border: 1px solid rgba(224,146,64,0.25); }
+  .days-late { background: rgba(224,82,85,0.12);  color: var(--red);    border: 1px solid rgba(224,82,85,0.25); }
+  .days-done { background: rgba(42,188,212,0.1);  color: var(--teal);   border: 1px solid rgba(42,188,212,0.2); }
+
+  /* Status badge (display only, inside select) */
+  .inline-select {
+    background: var(--bg);
+    border: 1px solid var(--border-light);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 5px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+    min-width: 130px;
+    transition: border-color 0.15s;
+  }
+  .inline-select:focus { border-color: var(--teal); }
+  .inline-select.editor-sel { min-width: 150px; }
+  .inline-select.status-sel { min-width: 145px; }
+
+  /* row flash on remote update */
+  @keyframes remote-flash { 0%{background:rgba(42,188,212,0.12)} 100%{background:transparent} }
+  .ep-row.remote-updated { animation: remote-flash 1.2s ease-out; }
+
+  /* Clips toggle */
+  .clips-cell { text-align: center; }
+  .clip-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 10px; }
+  .clip-check { width: 32px; height: 18px; background: var(--border); border-radius: 10px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+  .clip-check::after { content:''; position:absolute; width:12px; height:12px; background:white; border-radius:50%; top:3px; left:3px; transition: left 0.2s; }
+  .clip-check.on { background: var(--teal); }
+  .clip-check.on::after { left: 17px; }
+  .clip-label { color: var(--text-muted); font-size: 10px; }
+
+  /* Notes */
+  .notes-cell { min-width: 140px; }
+  .notes-input { background: transparent; border: 1px solid transparent; color: var(--text-muted); font-family: 'IBM Plex Mono', monospace; font-size: 10px; padding: 4px 6px; border-radius: 4px; width: 100%; resize: none; min-height: 28px; transition: border-color 0.15s; line-height: 1.4; }
+  .notes-input:focus { outline: none; border-color: var(--border-light); background: var(--bg); color: var(--text); }
+  .notes-input::placeholder { color: var(--text-dim); }
+
+  /* Workflow banner */
+  .workflow-banner { margin: 0 0 20px 0; background: linear-gradient(135deg, rgba(42,188,212,0.06) 0%, rgba(117,50,182,0.08) 100%); border: 1px solid rgba(42,188,212,0.2); border-radius: 10px; padding: 14px 20px; display: flex; gap: 20px; flex-wrap: wrap; align-items: center; }
+  .wf-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 12px; color: var(--teal); text-transform: uppercase; letter-spacing: 0.08em; flex-shrink: 0; }
+  .wf-steps { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .wf-step { font-size: 10px; padding: 4px 10px; border-radius: 20px; background: rgba(30,30,50,0.8); border: 1px solid var(--border-light); color: var(--text-muted); white-space: nowrap; }
+  .wf-arrow { color: var(--text-dim); font-size: 10px; }
+
+  /* Loading overlay */
+  .loading-overlay { position: fixed; inset: 0; background: rgba(10,10,16,0.85); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; gap: 16px; transition: opacity 0.3s; }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 12px; color: var(--text-muted); letter-spacing: 0.06em; }
+
+  tr.ep-overdue td:nth-child(2) .ep-name { color: var(--red); }
+
+  /* Footer */
+  .footer { padding: 20px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: var(--text-dim); letter-spacing: 0.05em; margin-top: 8px; }
+  .footer-brand { display: flex; gap: 6px; align-items: center; }
+  .footer-dot { width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(var(--teal), var(--purple)); }
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Connecting to database…</div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo-badge">WSC</div>
+    <div>
+      <div class="header-title">Post-Production Manager</div>
+      <div class="header-sub">We Sound Crazy — Edit Deadlines & Assignment Board</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="sync-status" id="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">Connecting…</span>
+    </div>
+    <div style="font-size:10px;color:var(--text-muted);text-align:right;line-height:1.5;">
+      <div>Last sync: <span id="last-updated">—</span></div>
+      <div>Frame.io review enabled</div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS BAR -->
+<div class="stats-bar">
+  <div class="stat-item"><div class="stat-value sv-white" id="stat-total">17</div><div class="stat-label">Total Episodes</div></div>
+  <div class="stat-item"><div class="stat-value sv-green"  id="stat-delivered">—</div><div class="stat-label">Delivered</div></div>
+  <div class="stat-item"><div class="stat-value sv-teal"   id="stat-inprog">—</div><div class="stat-label">In Progress</div></div>
+  <div class="stat-item"><div class="stat-value sv-orange" id="stat-review">—</div><div class="stat-label">In Review</div></div>
+  <div class="stat-item"><div class="stat-value sv-red"    id="stat-overdue">—</div><div class="stat-label">Overdue / At Risk</div></div>
+  <div class="stat-item"><div class="stat-value sv-purple" id="stat-unassigned">—</div><div class="stat-label">Unassigned</div></div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <label>Filter by Editor</label>
+  <select class="ctrl-select" id="filter-editor" onchange="applyFilters()">
+    <option value="all">All Editors</option>
+    <option value="Hyyer Creative">Hyyer Creative</option>
+    <option value="Lamont Baldwin">Lamont Baldwin</option>
+    <option value="Not-Assigned">Not-Assigned</option>
+  </select>
+  <div class="ctrl-divider"></div>
+  <label>Filter by Status</label>
+  <select class="ctrl-select" id="filter-status" onchange="applyFilters()">
+    <option value="all">All Statuses</option>
+    <option value="Not Started">Not Started</option>
+    <option value="In Progress">In Progress</option>
+    <option value="Rough Cut">Rough Cut</option>
+    <option value="In Review">In Review</option>
+    <option value="Host Review">Host Review</option>
+    <option value="Approved">Approved</option>
+    <option value="Delivered">Delivered</option>
+  </select>
+  <div class="ctrl-divider"></div>
+  <button class="ctrl-btn" onclick="toggleAll(false)">Collapse All</button>
+  <button class="ctrl-btn" onclick="toggleAll(true)">Expand All</button>
+  <button class="ctrl-btn" onclick="clearFilters()">Clear Filters</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="workflow-banner">
+    <div class="wf-title">Review & Approval Flow</div>
+    <div class="wf-steps">
+      <span class="wf-step">📽️ Raw Footage Delivered</span><span class="wf-arrow">→</span>
+      <span class="wf-step">✂️ Editor Rough Cut</span><span class="wf-arrow">→</span>
+      <span class="wf-step">👁️ Lamont + Aaron Review (Frame.io)</span><span class="wf-arrow">→</span>
+      <span class="wf-step">✏️ Revisions</span><span class="wf-arrow">→</span>
+      <span class="wf-step">🎙️ Host Approval (WSC Team)</span><span class="wf-arrow">→</span>
+      <span class="wf-step">🚀 Scheduled & Queued</span>
+    </div>
+  </div>
+
+  <!-- BATCH: RUSH -->
+  <div class="batch-section" id="section-rush">
+    <div class="batch-header rush" onclick="toggleSection('rush')">
+      <span class="batch-toggle open" id="toggle-rush">▶</span>
+      <span class="batch-name">🚨 Immediate Priorities</span>
+      <div class="batch-meta">
+        <span class="batch-chip bc-deadline">Rush Deadlines</span>
+        <span class="batch-chip bc-air" style="background:rgba(224,82,85,0.1);color:var(--red);border-color:rgba(224,82,85,0.25);">3 Episodes</span>
+      </div>
+      <div class="batch-progress-area">
+        <span class="progress-text" id="prog-text-rush">— / 3</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-rush" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="batch-body" id="body-rush">
+      <table class="ep-table">
+        <thead><tr><th style="width:36px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Assigned Editor</th><th>Edit Status</th><th>Social Clips</th><th>Notes</th></tr></thead>
+        <tbody id="rows-rush"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BATCH 2 -->
+  <div class="batch-section" id="section-batch2">
+    <div class="batch-header batch2" onclick="toggleSection('batch2')">
+      <span class="batch-toggle open" id="toggle-batch2">▶</span>
+      <span class="batch-name">Batch 2</span>
+      <div class="batch-meta">
+        <span class="batch-chip bc-deadline">📅 Deliver by Apr 20</span>
+        <span class="batch-chip bc-air">📺 Air: Apr 30 – May 21</span>
+        <span class="batch-chip bc-editor">Hyyer Creative</span>
+      </div>
+      <div class="batch-progress-area">
+        <span class="progress-text" id="prog-text-batch2">— / 4</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-batch2" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="batch-body" id="body-batch2">
+      <table class="ep-table">
+        <thead><tr><th style="width:36px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Assigned Editor</th><th>Edit Status</th><th>Social Clips</th><th>Notes</th></tr></thead>
+        <tbody id="rows-batch2"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BATCH 3 -->
+  <div class="batch-section" id="section-batch3">
+    <div class="batch-header batch3" onclick="toggleSection('batch3')">
+      <span class="batch-toggle open" id="toggle-batch3">▶</span>
+      <span class="batch-name">Batch 3</span>
+      <div class="batch-meta">
+        <span class="batch-chip bc-deadline">📅 Deliver by Apr 30</span>
+        <span class="batch-chip bc-air">📺 Air: May 28 – Jun 11</span>
+        <span class="batch-chip bc-warn" style="background:rgba(240,208,96,0.1);color:var(--yellow);border-color:rgba(240,208,96,0.25);">Split: LA + ATL Teams</span>
+      </div>
+      <div class="batch-progress-area">
+        <span class="progress-text" id="prog-text-batch3">— / 4</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-batch3" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="batch-body" id="body-batch3">
+      <table class="ep-table">
+        <thead><tr><th style="width:36px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Assigned Editor</th><th>Edit Status</th><th>Social Clips</th><th>Notes</th></tr></thead>
+        <tbody id="rows-batch3"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BATCH 4 -->
+  <div class="batch-section" id="section-batch4">
+    <div class="batch-header batch4" onclick="toggleSection('batch4')">
+      <span class="batch-toggle open" id="toggle-batch4">▶</span>
+      <span class="batch-name">Batch 4</span>
+      <div class="batch-meta">
+        <span class="batch-chip bc-deadline">📅 Deliver by May 21</span>
+        <span class="batch-chip bc-air">📺 Air: Jun 18 – Jul 9</span>
+        <span class="batch-chip bc-warn">⏳ TBD — Pending Batch 3 Review</span>
+      </div>
+      <div class="batch-progress-area">
+        <span class="progress-text" id="prog-text-batch4">— / 4</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-batch4" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="batch-body" id="body-batch4">
+      <table class="ep-table">
+        <thead><tr><th style="width:36px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Assigned Editor</th><th>Edit Status</th><th>Social Clips</th><th>Notes</th></tr></thead>
+        <tbody id="rows-batch4"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- BATCH 5 -->
+  <div class="batch-section" id="section-batch5">
+    <div class="batch-header batch5" onclick="toggleSection('batch5')">
+      <span class="batch-toggle open" id="toggle-batch5">▶</span>
+      <span class="batch-name">Batch 5</span>
+      <div class="batch-meta">
+        <span class="batch-chip bc-deadline">📅 Deliver by Jun 18</span>
+        <span class="batch-chip bc-air">📺 Air: Jul 16 – Jul 23</span>
+        <span class="batch-chip bc-warn">⏳ TBD — Pending Batch 3 Review</span>
+      </div>
+      <div class="batch-progress-area">
+        <span class="progress-text" id="prog-text-batch5">— / 2</span>
+        <div class="progress-bar-wrap"><div class="progress-bar-fill" id="prog-batch5" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="batch-body" id="body-batch5">
+      <table class="ep-table">
+        <thead><tr><th style="width:36px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Assigned Editor</th><th>Edit Status</th><th>Social Clips</th><th>Notes</th></tr></thead>
+        <tbody id="rows-batch5"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div class="footer-brand">
+    <div class="footer-dot"></div>
+    <span>We Sound Crazy × Walton Creative Group — Post-Production Manager</span>
+  </div>
+  <div>Review via Frame.io &nbsp;·&nbsp; Final approval: WSC Hosts &nbsp;·&nbsp; First review: Lamont Baldwin + Aaron Walton</div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────
+     JAVASCRIPT — Supabase sync + realtime
+───────────────────────────────────────────────────────────────────────── -->
+<script>
+// ── STATIC EPISODE DEFINITIONS ────────────────────────────────────────
+// These are the source-of-truth defaults. Supabase data overlays on top.
+const EPISODE_DEFS = {
+  rush: [
+    { id:'r1',   num:1, guest:'Jam & Lewis',      note:'incl. MJB + Janet social clip', airDate:null,          editDeadline:'2026-04-06', editor:'Not-Assigned', status:'In Review',  clips:false, epNotes:'Deadline passed — confirm delivery status' },
+    { id:'r2',   num:2, guest:'Kelly Rowland',    note:'First draft or final',           airDate:null,          editDeadline:'2026-04-10', editor:'Not-Assigned', status:'In Review',  clips:false, epNotes:'Deadline passed — confirm delivery status' },
+    { id:'r3',   num:3, guest:'Trevor Jackson',   note:'',                               airDate:null,          editDeadline:'2026-04-15', editor:'Not-Assigned', status:'In Progress',clips:false, epNotes:'' },
+  ],
+  batch2: [
+    { id:'b2e1', num:1, guest:'Mary Mary',         note:'',                              airDate:'2026-04-30',  editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b2e2', num:2, guest:'Warryn Campbell',   note:'',                              airDate:'2026-05-07',  editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b2e3', num:3, guest:'Tone Stith',        note:'',                              airDate:'2026-05-14',  editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b2e4', num:4, guest:'Kym Whitley',       note:'',                              airDate:'2026-05-21',  editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'' },
+  ],
+  batch3: [
+    { id:'b3e1', num:1, guest:'Funky Dineva',      note:'Filming 4/8 ATL',               airDate:'2026-05-28',  editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b3e2', num:2, guest:'LA Reid (Part 1)',  note:'',                              airDate:'2026-06-01',  editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b3e3', num:3, guest:'LA Reid (Part 2)',  note:'',                              airDate:'2026-06-04',  editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b3e4', num:4, guest:'Tricky Stewart',    note:'Filming 4/8 ATL',               airDate:'2026-06-11',  editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+  ],
+  batch4: [
+    { id:'b4e1', num:1, guest:'Teedra Moses',      note:'Filming 4/30 Nashville',        airDate:'2026-06-18',  editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b4e2', num:2, guest:'Omarion',           note:'Filming 4/8 ATL',               airDate:'2026-06-25',  editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b4e3', num:3, guest:'Shannon Wallace',   note:'',                              airDate:'2026-07-02',  editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b4e4', num:4, guest:'Keri Hilson',       note:'Filming 4/9 ATL',               airDate:'2026-07-09',  editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+  ],
+  batch5: [
+    { id:'b5e1', num:1, guest:'Keith Robinson',    note:'Filming 4/8 ATL',               airDate:'2026-07-16',  editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+    { id:'b5e2', num:2, guest:'Travis Malloy',     note:'Filming 4/9 ATL',               airDate:'2026-07-23',  editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'' },
+  ],
+};
+
+// Live episode state (mutable copy, overlaid with Supabase)
+const EPISODES = JSON.parse(JSON.stringify(EPISODE_DEFS));
+
+// Flat lookup: id → { batchKey, ep }
+const EP_INDEX = {};
+Object.keys(EPISODES).forEach(bk => EPISODES[bk].forEach(ep => EP_INDEX[ep.id] = { batchKey: bk, ep }));
+
+const EDITORS  = ['Hyyer Creative', 'Lamont Baldwin', 'Not-Assigned'];
+const STATUSES = ['Not Started','In Progress','Rough Cut','In Review','Host Review','Approved','Delivered'];
+const TODAY    = new Date('2026-04-12');
+const TABLE    = 'wsc_episodes';
+
+let supabase = null;
+
+// ── SUPABASE INIT ─────────────────────────────────────────────────────
+async function initSupabase() {
+  if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
+    // Running without credentials — use defaults, no sync
+    setSyncStatus('offline', 'Local only (no Supabase)');
+    hideLoading();
+    renderAll();
+    return;
+  }
+
+  try {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    setSyncStatus('syncing', 'Loading…');
+
+    // Fetch all saved states
+    const { data, error } = await supabase.from(TABLE).select('*');
+    if (error) throw error;
+
+    // Overlay Supabase data onto defaults
+    if (data && data.length) {
+      data.forEach(row => {
+        const entry = EP_INDEX[row.id];
+        if (!entry) return;
+        const ep = entry.ep;
+        ep.editor   = row.editor   ?? ep.editor;
+        ep.status   = row.status   ?? ep.status;
+        ep.clips    = row.clips    ?? ep.clips;
+        ep.epNotes  = row.ep_notes ?? ep.epNotes;
+      });
+    }
+
+    setSyncStatus('connected', 'Live sync on');
+    hideLoading();
+    renderAll();
+    subscribeRealtime();
+
+  } catch (err) {
+    console.error('Supabase error:', err);
+    setSyncStatus('error', 'Sync error — local mode');
+    hideLoading();
+    renderAll();
+    showToast('⚠ Could not connect to database. Running in local mode.', 'error');
+  }
+}
+
+// ── REALTIME SUBSCRIPTION ─────────────────────────────────────────────
+function subscribeRealtime() {
+  if (!supabase) return;
+  supabase
+    .channel('wsc_episodes_changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: TABLE }, payload => {
+      const row = payload.new || payload.old;
+      if (!row || !row.id) return;
+      const entry = EP_INDEX[row.id];
+      if (!entry) return;
+      const ep = entry.ep;
+
+      // Only apply if it's a remote change (optimistic updates already applied locally)
+      ep.editor  = row.editor   ?? ep.editor;
+      ep.status  = row.status   ?? ep.status;
+      ep.clips   = row.clips    ?? ep.clips;
+      ep.epNotes = row.ep_notes ?? ep.epNotes;
+
+      // Re-render that row
+      const tr = document.querySelector(`tr[data-id="${ep.id}"]`);
+      if (tr) {
+        const tmp = document.createElement('tbody');
+        tmp.innerHTML = renderRow(ep, entry.batchKey);
+        const newTr = tmp.firstElementChild;
+        tr.replaceWith(newTr);
+        // Flash the row so others know it updated remotely
+        setTimeout(() => {
+          const updated = document.querySelector(`tr[data-id="${ep.id}"]`);
+          if (updated) { updated.classList.add('remote-updated'); setTimeout(() => updated.classList.remove('remote-updated'), 1200); }
+        }, 10);
+      }
+
+      updateStats();
+      updateBatchProgress();
+      setLastUpdated();
+      showToast(`🔄 ${ep.guest} updated remotely`, 'info');
+    })
+    .subscribe();
+}
+
+// ── UPSERT TO SUPABASE ────────────────────────────────────────────────
+async function upsertEpisode(ep) {
+  if (!supabase) return;
+  setSyncDot('syncing');
+  const { error } = await supabase.from(TABLE).upsert({
+    id:         ep.id,
+    batch:      EP_INDEX[ep.id]?.batchKey,
+    editor:     ep.editor,
+    status:     ep.status,
+    clips:      ep.clips,
+    ep_notes:   ep.epNotes,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'id' });
+
+  if (error) {
+    console.error('Upsert error:', error);
+    showToast('⚠ Sync failed — change saved locally', 'error');
+    setSyncDot('error');
+  } else {
+    setSyncDot('connected');
+    setLastUpdated();
+  }
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+function parseDateStr(s) {
+  if (!s) return null;
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d);
+}
+function formatDate(s) {
+  if (!s) return '—';
+  return parseDateStr(s).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+function daysUntil(s) {
+  if (!s) return null;
+  return Math.floor((parseDateStr(s) - TODAY) / 86400000);
+}
+function daysChip(days, status) {
+  if (status === 'Delivered' || status === 'Approved') return `<span class="days-chip days-done">✓ Done</span>`;
+  if (days === null) return '—';
+  if (days < 0)  return `<span class="days-chip days-late">${Math.abs(days)}d overdue</span>`;
+  if (days === 0) return `<span class="days-chip days-late">Due today</span>`;
+  if (days <= 7)  return `<span class="days-chip days-warn">${days}d left</span>`;
+  return `<span class="days-chip days-ok">${days}d left</span>`;
+}
+function editorOptions(sel) { return EDITORS.map(e  => `<option value="${e}"${e===sel?' selected':''}>${e}</option>`).join(''); }
+function statusOptions(sel) { return STATUSES.map(s => `<option value="${s}"${s===sel?' selected':''}>${s}</option>`).join(''); }
+
+// ── RENDER ROW ────────────────────────────────────────────────────────
+function renderRow(ep, batchKey) {
+  const days    = daysUntil(ep.editDeadline);
+  const overdue = days !== null && days < 0 && ep.status !== 'Delivered' && ep.status !== 'Approved';
+  return `
+    <tr class="ep-row${overdue?' ep-overdue':''}" data-id="${ep.id}" data-batch="${batchKey}" data-editor="${ep.editor}" data-status="${ep.status}">
+      <td class="ep-num">${String(ep.num).padStart(2,'0')}</td>
+      <td>
+        <div class="ep-name">${ep.guest}</div>
+        ${ep.note ? `<div class="ep-note">📍 ${ep.note}</div>` : ''}
+      </td>
+      <td class="date-cell"><span class="date-val">${formatDate(ep.airDate)}</span></td>
+      <td class="date-cell"><span class="${days!==null&&days<0?'date-past':'date-val'}">${formatDate(ep.editDeadline)}</span></td>
+      <td>${daysChip(days, ep.status)}</td>
+      <td>
+        <select class="inline-select editor-sel" onchange="updateField('${ep.id}','editor',this.value)">
+          ${editorOptions(ep.editor)}
+        </select>
+      </td>
+      <td>
+        <select class="inline-select status-sel" onchange="updateField('${ep.id}','status',this.value)">
+          ${statusOptions(ep.status)}
+        </select>
+      </td>
+      <td class="clips-cell">
+        <label class="clip-toggle" title="Social clips ready">
+          <div class="clip-check${ep.clips?' on':''}" onclick="updateField('${ep.id}','clips',${!ep.clips})"></div>
+          <span class="clip-label">${ep.clips ? 'Ready' : 'Pending'}</span>
+        </label>
+      </td>
+      <td class="notes-cell">
+        <textarea class="notes-input" rows="1" placeholder="Add note…"
+          onchange="updateField('${ep.id}','epNotes',this.value)">${ep.epNotes}</textarea>
+      </td>
+    </tr>`;
+}
+
+function renderBatch(bk) {
+  const tbody = document.getElementById(`rows-${bk}`);
+  if (tbody) tbody.innerHTML = EPISODES[bk].map(ep => renderRow(ep, bk)).join('');
+}
+
+function renderAll() {
+  Object.keys(EPISODES).forEach(renderBatch);
+  updateStats();
+  updateBatchProgress();
+}
+
+// ── UPDATE FIELD (optimistic + sync) ─────────────────────────────────
+function updateField(id, field, value) {
+  const entry = EP_INDEX[id];
+  if (!entry) return;
+  const ep = entry.ep;
+  ep[field] = value;
+
+  // Re-render row
+  const tr = document.querySelector(`tr[data-id="${id}"]`);
+  if (tr) {
+    const tmp = document.createElement('tbody');
+    tmp.innerHTML = renderRow(ep, entry.batchKey);
+    tr.replaceWith(tmp.firstElementChild);
+  }
+  // Update row's filter attributes
+  const newTr = document.querySelector(`tr[data-id="${id}"]`);
+  if (newTr) { newTr.dataset.editor = ep.editor; newTr.dataset.status = ep.status; }
+
+  updateStats();
+  updateBatchProgress();
+  applyFilters();
+  upsertEpisode(ep); // async, non-blocking
+}
+
+// ── STATS ─────────────────────────────────────────────────────────────
+function updateStats() {
+  const all = Object.values(EPISODES).flat();
+  set('stat-delivered',  all.filter(e => e.status === 'Delivered').length);
+  set('stat-inprog',     all.filter(e => e.status === 'In Progress' || e.status === 'Rough Cut').length);
+  set('stat-review',     all.filter(e => e.status === 'In Review' || e.status === 'Host Review').length);
+  set('stat-overdue',    all.filter(e => { const d=daysUntil(e.editDeadline); return d!==null&&d<0&&e.status!=='Delivered'&&e.status!=='Approved'; }).length);
+  set('stat-unassigned', all.filter(e => e.editor === 'Not-Assigned' && e.status !== 'Delivered').length);
+}
+function set(id, v) { const el=document.getElementById(id); if(el) el.textContent=v; }
+
+function updateBatchProgress() {
+  Object.keys(EPISODES).forEach(bk => {
+    const eps  = EPISODES[bk];
+    const done = eps.filter(e => e.status === 'Delivered' || e.status === 'Approved').length;
+    const pct  = eps.length ? Math.round((done/eps.length)*100) : 0;
+    const bar  = document.getElementById(`prog-${bk}`);
+    const txt  = document.getElementById(`prog-text-${bk}`);
+    if (bar) bar.style.width = pct + '%';
+    if (txt) txt.textContent = `${done} / ${eps.length} delivered`;
+  });
+}
+
+// ── TOGGLE ────────────────────────────────────────────────────────────
+function toggleSection(key) {
+  const body = document.getElementById(`body-${key}`);
+  const tog  = document.getElementById(`toggle-${key}`);
+  if (!body) return;
+  const isOpen = !body.classList.contains('collapsed');
+  body.classList.toggle('collapsed', isOpen);
+  if (tog) tog.classList.toggle('open', !isOpen);
+}
+function toggleAll(open) {
+  ['rush','batch2','batch3','batch4','batch5'].forEach(k => {
+    const body = document.getElementById(`body-${k}`);
+    const tog  = document.getElementById(`toggle-${k}`);
+    if (body) body.classList.toggle('collapsed', !open);
+    if (tog)  tog.classList.toggle('open', open);
+  });
+}
+
+// ── FILTERS ──────────────────────────────────────────────────────────
+function applyFilters() {
+  const ef = document.getElementById('filter-editor').value;
+  const sf = document.getElementById('filter-status').value;
+  document.querySelectorAll('.ep-row').forEach(row => {
+    const showEd = ef === 'all' || row.dataset.editor === ef;
+    const showSt = sf === 'all' || row.dataset.status === sf;
+    row.classList.toggle('hidden', !(showEd && showSt));
+  });
+}
+function clearFilters() {
+  document.getElementById('filter-editor').value = 'all';
+  document.getElementById('filter-status').value = 'all';
+  applyFilters();
+}
+
+// ── UI UTILS ─────────────────────────────────────────────────────────
+function setSyncStatus(state, label) {
+  setSyncDot(state);
+  const el = document.getElementById('sync-label');
+  if (el) el.textContent = label;
+}
+function setSyncDot(state) {
+  const dot = document.getElementById('sync-dot');
+  if (!dot) return;
+  dot.className = 'sync-dot';
+  if (state === 'connected') dot.classList.add('connected');
+  if (state === 'syncing')   dot.classList.add('syncing');
+  if (state === 'error')     dot.classList.add('error');
+}
+function hideLoading() {
+  const ol = document.getElementById('loading-overlay');
+  if (ol) ol.classList.add('hidden');
+}
+function setLastUpdated() {
+  const now = new Date();
+  const el  = document.getElementById('last-updated');
+  if (el) el.textContent = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+}
+
+let toastTimer;
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── BOOT ─────────────────────────────────────────────────────────────
+initSupabase();
+</script>
+</body>
+</html>
