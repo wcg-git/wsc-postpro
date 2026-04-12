@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WSC Post-Production Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
 <script>
   const SUPABASE_URL      = 'https://jhzlwwsvqldhmzqluypu.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoemx3d3N2cWxkaG16cWx1eXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTAzODUsImV4cCI6MjA5MTU2NjM4NX0.gspAUAxMwA-N8V71BlADbmdC9THa5yT6MrjTgJI2YBo';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+
 <style>
   :root{--teal:#2ABCD4;--teal-light:#56C5E0;--teal-dim:rgba(42,188,212,0.12);--purple:#7532B6;--purple-light:#9B5FD6;--bg:#0A0A10;--bg-card:#111118;--bg-section:#13131C;--bg-hover:#1A1A28;--border:#1E1E30;--border-light:#2A2A40;--text:#E8E8F0;--text-muted:#7070A0;--text-dim:#4A4A70;--white:#FFFFFF;--red:#E05555;--orange:#E09240;--green:#2ECC71;--yellow:#F0D060;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -29,7 +31,7 @@
   .stats-bar{display:flex;background:var(--bg-card);border-bottom:1px solid var(--border);overflow-x:auto;}
   .stat-item{flex:1;min-width:120px;padding:14px 20px;border-right:1px solid var(--border);text-align:center;}
   .stat-item:last-child{border-right:none;}
-  .stat-value{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;line-height:1;margin-bottom:4px;}
+  .stat-value{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;line-height:1;margin-bottom:4px;transition:color 0.3s;}
   .stat-label{font-size:10px;color:var(--text-muted);letter-spacing:0.08em;text-transform:uppercase;}
   .sv-teal{color:var(--teal);}.sv-purple{color:var(--purple-light);}.sv-red{color:var(--red);}.sv-green{color:var(--green);}.sv-orange{color:var(--orange);}.sv-white{color:var(--white);}
   .controls{padding:12px 28px;background:var(--bg-section);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-wrap:wrap;}
@@ -65,7 +67,7 @@
   .progress-text{font-size:11px;color:var(--text-muted);white-space:nowrap;}
   .progress-bar-wrap{width:100px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
   .progress-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--teal),var(--purple-light));transition:width 0.4s ease;}
-  .batch-body{overflow:hidden;}
+  .batch-body{overflow:hidden;transition:all 0.2s;}
   .batch-body.collapsed{display:none;}
   .ep-table{width:100%;border-collapse:collapse;}
   .ep-table thead tr{background:rgba(30,30,48,0.8);border-bottom:1px solid var(--border);}
@@ -113,9 +115,48 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .loading-text{font-size:12px;color:var(--text-muted);letter-spacing:0.06em;}
   tr.ep-overdue td:nth-child(2) .ep-name{color:var(--red);}
-  .footer{padding:20px 28px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-dim);margin-top:8px;}
+  .footer{padding:20px 28px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--text-dim);margin-top:8px;flex-wrap:wrap;gap:8px;}
   .footer-brand{display:flex;gap:6px;align-items:center;}
   .footer-dot{width:6px;height:6px;border-radius:50%;background:linear-gradient(var(--teal),var(--purple));}
+
+  /* ── MOBILE ── */
+  @media (max-width: 768px) {
+    .header{padding:12px 16px;flex-wrap:wrap;gap:10px;}
+    .header-right{width:100%;justify-content:space-between;}
+    .header-title{font-size:14px;}
+    .header-sub{font-size:10px;}
+    .stats-bar{flex-wrap:wrap;}
+    .stat-item{min-width:50%;flex:1 1 50%;border-right:none;border-bottom:1px solid var(--border);padding:10px 14px;}
+    .stat-item:nth-child(odd){border-right:1px solid var(--border);}
+    .stat-value{font-size:20px;}
+    .controls{padding:10px 14px;gap:8px;}
+    .ctrl-select{font-size:12px;padding:8px 10px;flex:1;}
+    .ctrl-divider{display:none;}
+    .ctrl-btn{font-size:11px;padding:8px 12px;flex:1;text-align:center;}
+    .main{padding:14px 12px;}
+    .workflow-banner{padding:10px 14px;gap:10px;}
+    .wf-steps{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;}
+    .wf-step{flex-shrink:0;}
+    .batch-header{padding:12px 14px;flex-wrap:wrap;gap:8px;}
+    .batch-name{font-size:13px;}
+    .batch-progress-area{width:100%;justify-content:flex-end;}
+    .ep-table thead{display:none;}
+    .ep-table tbody tr{display:block;padding:14px;border-bottom:2px solid var(--border);}
+    .ep-table tbody tr:last-child{border-bottom:none;}
+    .ep-table td{display:flex;align-items:flex-start;padding:6px 0;border:none;font-size:12px;gap:8px;}
+    .ep-table td::before{content:attr(data-label);font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.08em;min-width:90px;padding-top:3px;flex-shrink:0;}
+    .ep-table td.ep-num-cell{display:none;}
+    .ep-name{font-size:14px;white-space:normal;}
+    .inline-select{min-width:unset;width:100%;font-size:12px;padding:7px 8px;}
+    .notes-input{font-size:12px;min-height:36px;}
+    .clips-cell{justify-content:flex-start;}
+    .footer{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:4px;}
+  }
+  @media (max-width: 480px) {
+    .stat-item{min-width:100%;flex:1 1 100%;border-right:none;}
+    .stat-item:nth-child(odd){border-right:none;}
+    .batch-chip{font-size:9px;}
+  }
 </style>
 </head>
 <body>
@@ -184,6 +225,7 @@
   </div>
 </div>
 <div class="footer"><div class="footer-brand"><div class="footer-dot"></div><span>We Sound Crazy × Walton Creative Group — Post-Production Manager</span></div><div>Review via Frame.io &nbsp;·&nbsp; Final approval: WSC Hosts &nbsp;·&nbsp; First review: Lamont Baldwin + Aaron Walton</div></div>
+
 <script>
 const EPISODE_DEFS={rush:[{id:'r1',num:1,guest:'Jam & Lewis',note:'incl. MJB + Janet social clip',airDate:null,editDeadline:'2026-04-06',editor:'Not-Assigned',status:'In Review',clips:false,epNotes:'Deadline passed — confirm delivery status'},{id:'r2',num:2,guest:'Kelly Rowland',note:'First draft or final',airDate:null,editDeadline:'2026-04-10',editor:'Not-Assigned',status:'In Review',clips:false,epNotes:'Deadline passed — confirm delivery status'},{id:'r3',num:3,guest:'Trevor Jackson',note:'',airDate:null,editDeadline:'2026-04-15',editor:'Not-Assigned',status:'In Progress',clips:false,epNotes:''}],batch2:[{id:'b2e1',num:1,guest:'Mary Mary',note:'',airDate:'2026-04-30',editDeadline:'2026-04-20',editor:'Hyyer Creative',status:'Not Started',clips:false,epNotes:''},{id:'b2e2',num:2,guest:'Warryn Campbell',note:'',airDate:'2026-05-07',editDeadline:'2026-04-20',editor:'Hyyer Creative',status:'Not Started',clips:false,epNotes:''},{id:'b2e3',num:3,guest:'Tone Stith',note:'',airDate:'2026-05-14',editDeadline:'2026-04-20',editor:'Hyyer Creative',status:'Not Started',clips:false,epNotes:''},{id:'b2e4',num:4,guest:'Kym Whitley',note:'',airDate:'2026-05-21',editDeadline:'2026-04-20',editor:'Hyyer Creative',status:'Not Started',clips:false,epNotes:''}],batch3:[{id:'b3e1',num:1,guest:'Funky Dineva',note:'Filming 4/8 ATL',airDate:'2026-05-28',editDeadline:'2026-04-30',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b3e2',num:2,guest:'LA Reid (Part 1)',note:'',airDate:'2026-06-01',editDeadline:'2026-04-30',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b3e3',num:3,guest:'LA Reid (Part 2)',note:'',airDate:'2026-06-04',editDeadline:'2026-04-30',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b3e4',num:4,guest:'Tricky Stewart',note:'Filming 4/8 ATL',airDate:'2026-06-11',editDeadline:'2026-04-30',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''}],batch4:[{id:'b4e1',num:1,guest:'Teedra Moses',note:'Filming 4/30 Nashville',airDate:'2026-06-18',editDeadline:'2026-05-21',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b4e2',num:2,guest:'Omarion',note:'Filming 4/8 ATL',airDate:'2026-06-25',editDeadline:'2026-05-21',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b4e3',num:3,guest:'Shannon Wallace',note:'',airDate:'2026-07-02',editDeadline:'2026-05-21',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b4e4',num:4,guest:'Keri Hilson',note:'Filming 4/9 ATL',airDate:'2026-07-09',editDeadline:'2026-05-21',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''}],batch5:[{id:'b5e1',num:1,guest:'Keith Robinson',note:'Filming 4/8 ATL',airDate:'2026-07-16',editDeadline:'2026-06-18',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''},{id:'b5e2',num:2,guest:'Travis Malloy',note:'Filming 4/9 ATL',airDate:'2026-07-23',editDeadline:'2026-06-18',editor:'Not-Assigned',status:'Not Started',clips:false,epNotes:''}]};
 const EPISODES=JSON.parse(JSON.stringify(EPISODE_DEFS));
@@ -213,7 +255,7 @@ function daysChip(days,status){if(status==='Delivered'||status==='Approved')retu
 function editorOptions(sel){return EDITORS.map(e=>`<option value="${e}"${e===sel?' selected':''}>${e}</option>`).join('');}
 function statusOptions(sel){return STATUSES.map(s=>`<option value="${s}"${s===sel?' selected':''}>${s}</option>`).join('');}
 
-function renderRow(ep,batchKey){const days=daysUntil(ep.editDeadline);const overdue=days!==null&&days<0&&ep.status!=='Delivered'&&ep.status!=='Approved';return`<tr class="ep-row${overdue?' ep-overdue':''}" data-id="${ep.id}" data-batch="${batchKey}" data-editor="${ep.editor}" data-status="${ep.status}"><td class="ep-num">${String(ep.num).padStart(2,'0')}</td><td><div class="ep-name">${ep.guest}</div>${ep.note?`<div class="ep-note">📍 ${ep.note}</div>`:''}</td><td class="date-cell"><span class="date-val">${formatDate(ep.airDate)}</span></td><td class="date-cell"><span class="${days!==null&&days<0?'date-past':'date-val'}">${formatDate(ep.editDeadline)}</span></td><td>${daysChip(days,ep.status)}</td><td><select class="inline-select editor-sel" onchange="updateField('${ep.id}','editor',this.value)">${editorOptions(ep.editor)}</select></td><td><select class="inline-select status-sel" onchange="updateField('${ep.id}','status',this.value)">${statusOptions(ep.status)}</select></td><td class="clips-cell"><label class="clip-toggle"><div class="clip-check${ep.clips?' on':''}" onclick="updateField('${ep.id}','clips',${!ep.clips})"></div><span class="clip-label">${ep.clips?'Ready':'Pending'}</span></label></td><td class="notes-cell"><textarea class="notes-input" rows="1" placeholder="Add note…" onchange="updateField('${ep.id}','epNotes',this.value)">${ep.epNotes}</textarea></td></tr>`;}
+function renderRow(ep,batchKey){const days=daysUntil(ep.editDeadline);const overdue=days!==null&&days<0&&ep.status!=='Delivered'&&ep.status!=='Approved';return`<tr class="ep-row${overdue?' ep-overdue':''}" data-id="${ep.id}" data-batch="${batchKey}" data-editor="${ep.editor}" data-status="${ep.status}"><td class="ep-num ep-num-cell">${String(ep.num).padStart(2,'0')}</td><td data-label="Episode"><div class="ep-name">${ep.guest}</div>${ep.note?`<div class="ep-note">📍 ${ep.note}</div>`:''}</td><td class="date-cell" data-label="Air Date"><span class="date-val">${formatDate(ep.airDate)}</span></td><td class="date-cell" data-label="Deadline"><span class="${days!==null&&days<0?'date-past':'date-val'}">${formatDate(ep.editDeadline)}</span></td><td data-label="Days Left">${daysChip(days,ep.status)}</td><td data-label="Editor"><select class="inline-select editor-sel" onchange="updateField('${ep.id}','editor',this.value)">${editorOptions(ep.editor)}</select></td><td data-label="Status"><select class="inline-select status-sel" onchange="updateField('${ep.id}','status',this.value)">${statusOptions(ep.status)}</select></td><td class="clips-cell" data-label="Clips"><label class="clip-toggle"><div class="clip-check${ep.clips?' on':''}" onclick="updateField('${ep.id}','clips',${!ep.clips})"></div><span class="clip-label">${ep.clips?'Ready':'Pending'}</span></label></td><td class="notes-cell" data-label="Notes"><textarea class="notes-input" rows="1" placeholder="Add note…" onchange="updateField('${ep.id}','epNotes',this.value)">${ep.epNotes}</textarea></td></tr>`;}
 
 function renderBatch(bk){const t=document.getElementById(`rows-${bk}`);if(t)t.innerHTML=EPISODES[bk].map(ep=>renderRow(ep,bk)).join('');}
 function renderAll(){Object.keys(EPISODES).forEach(renderBatch);updateStats();updateBatchProgress();}
