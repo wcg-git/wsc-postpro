@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WSC Post-Production Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
- 
+
 <script>
   const SUPABASE_URL      = 'https://jhzlwwsvqldhmzqluypu.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoemx3d3N2cWxkaG16cWx1eXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTAzODUsImV4cCI6MjA5MTU2NjM4NX0.gspAUAxMwA-N8V71BlADbmdC9THa5yT6MrjTgJI2YBo';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
- 
+
 <style>
   :root {
     --teal: #0E9DB5;
@@ -40,7 +40,7 @@
     --yellow-light: #FEF9E6;
     --blue: #1A5FA8;
     --blue-light: #E8F0FB;
- 
+
     /* Workflow step colors */
     --wf1: #475569; --wf1-bg: #F1F5F9;
     --wf2: #1A5FA8; --wf2-bg: #E8F0FB;
@@ -49,9 +49,9 @@
     --wf5: #6B35A8; --wf5-bg: #F0EAF8;
     --wf6: #1A7A45; --wf6-bg: #E8F7EE;
   }
- 
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
   body {
     font-family: 'IBM Plex Sans', -apple-system, sans-serif;
     background: var(--bg);
@@ -61,7 +61,7 @@
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
- 
+
   /* HEADER */
   .header {
     background: var(--white);
@@ -95,7 +95,7 @@
   }
   .header-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
   .header-right { display: flex; gap: 12px; align-items: center; }
- 
+
   /* SYNC */
   .sync-status {
     display: flex; align-items: center; gap: 6px;
@@ -109,7 +109,7 @@
   .sync-dot.syncing   { background: var(--orange); }
   .sync-dot.error     { background: var(--red); }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
- 
+
   /* STATS BAR */
   .stats-bar { display: flex; background: var(--white); border-bottom: 1px solid var(--border); }
   .stat-item { flex: 1; min-width: 110px; padding: 14px 20px; border-right: 1px solid var(--border); text-align: center; }
@@ -122,7 +122,7 @@
   .sv-orange  { color: var(--orange); }
   .sv-red     { color: var(--red); }
   .sv-purple  { color: var(--purple); }
- 
+
   /* CONTROLS */
   .controls {
     padding: 10px 28px; background: var(--bg-section);
@@ -145,7 +145,7 @@
     cursor: pointer; transition: all 0.12s; font-weight: 500;
   }
   .ctrl-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
- 
+
   /* TOAST */
   .toast {
     position: fixed; bottom: 24px; right: 24px;
@@ -158,10 +158,10 @@
   .toast.success { background: var(--green-light); color: var(--green); border-color: #A8D8B8; }
   .toast.error   { background: var(--red-light); color: var(--red); border-color: #F0B8B3; }
   .toast.info    { background: var(--teal-light); color: var(--teal); border-color: var(--teal-border); }
- 
+
   /* MAIN */
   .main { padding: 22px 28px; max-width: 1600px; }
- 
+
   /* WORKFLOW BANNER */
   .workflow-banner {
     margin: 0 0 18px 0;
@@ -190,7 +190,7 @@
   .wf-step.s5 { background: var(--wf5-bg); color: var(--wf5); border: 1px solid var(--purple-border); }
   .wf-step.s6 { background: var(--wf6-bg); color: var(--wf6); border: 1px solid #A8D8B8; }
   .wf-arrow { color: var(--text-dim); font-size: 12px; font-weight: 400; }
- 
+
   /* BATCH SECTION */
   .batch-section { margin-bottom: 16px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--white); box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
   .batch-header { display: flex; align-items: center; padding: 12px 18px; cursor: pointer; user-select: none; gap: 12px; background: var(--bg-section); border-bottom: 1px solid var(--border); transition: background 0.12s; }
@@ -213,7 +213,7 @@
   .progress-text { font-size: 11px; color: var(--text-muted); white-space: nowrap; font-weight: 500; }
   .progress-bar-wrap { width: 90px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
   .progress-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--teal), var(--purple)); transition: width 0.4s ease; }
- 
+
   /* TABLE */
   .batch-body { overflow: hidden; }
   .batch-body.collapsed { display: none; }
@@ -231,14 +231,14 @@
   .date-cell { white-space: nowrap; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
   .date-val  { color: var(--text); }
   .date-past { color: var(--text-dim); }
- 
+
   /* Days chip */
   .days-chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; }
   .days-ok   { background: var(--green-light); color: var(--green); border: 1px solid #A8D8B8; }
   .days-warn { background: var(--orange-light); color: var(--orange); border: 1px solid #F0C898; }
   .days-late { background: var(--red-light); color: var(--red); border: 1px solid #F0B8B3; }
   .days-done { background: var(--teal-light); color: var(--teal); border: 1px solid var(--teal-border); }
- 
+
   /* Selects */
   .inline-select {
     background: var(--white); border: 1px solid var(--border);
@@ -250,11 +250,11 @@
   .inline-select:focus { border-color: var(--teal); }
   .inline-select.editor-sel { min-width: 148px; }
   .inline-select.status-sel { min-width: 140px; }
- 
+
   /* Remote flash */
   @keyframes remote-flash { 0%{background:var(--teal-light)} 100%{background:transparent} }
   .ep-row.remote-updated { animation: remote-flash 1.2s ease-out; }
- 
+
   /* Clips toggle */
   .clips-cell { text-align: center; }
   .clip-toggle { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; }
@@ -263,7 +263,7 @@
   .clip-check.on { background: var(--teal); }
   .clip-check.on::after { left: 16px; }
   .clip-label { color: var(--text-muted); font-size: 11px; font-weight: 500; }
- 
+
   /* Notes */
   .notes-cell { min-width: 130px; }
   .notes-input {
@@ -275,7 +275,7 @@
   }
   .notes-input:focus { outline: none; border-color: var(--border); background: var(--bg-section); color: var(--text); }
   .notes-input::placeholder { color: var(--text-dim); }
- 
+
   /* LINK TRACKER */
   .links-cell { text-align: center; }
   .links-btn {
@@ -287,7 +287,7 @@
   }
   .links-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
   .links-btn.has-links { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
- 
+
   .links-panel {
     background: var(--bg-section);
     border-top: 1px solid var(--border);
@@ -322,10 +322,10 @@
     visibility: hidden;
   }
   .link-open.visible { visibility: visible; }
- 
+
   /* Overdue */
   tr.ep-overdue td:nth-child(2) .ep-name { color: var(--red); }
- 
+
   /* Drag and drop */
   .ep-row { cursor: default; }
   .ep-row.dragging { opacity: 0.35; }
@@ -339,7 +339,7 @@
   .drag-handle:hover { color: var(--teal); }
   .drag-handle:active { cursor: grabbing; }
   .ep-num-cell { display: flex; align-items: center; gap: 4px; width: 52px; min-width: 52px; }
- 
+
   /* Editable dates */
   .date-editable {
     cursor: pointer; border-bottom: 1px dashed var(--border-dark);
@@ -352,19 +352,19 @@
     padding: 3px 6px; background: var(--white); color: var(--text);
     outline: none; width: 130px;
   }
- 
+
   /* Loading overlay */
   .loading-overlay { position: fixed; inset: 0; background: rgba(244,245,247,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 200; gap: 14px; transition: opacity 0.3s; }
   .loading-overlay.hidden { opacity: 0; pointer-events: none; }
   .loading-spinner { width: 32px; height: 32px; border: 2px solid var(--border-dark); border-top-color: var(--teal); border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-size: 13px; color: var(--text-muted); font-weight: 500; }
- 
+
   /* Footer */
   .footer { padding: 18px 28px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--text-dim); margin-top: 6px; flex-wrap: wrap; gap: 8px; font-weight: 500; }
   .footer-brand { display: flex; gap: 6px; align-items: center; }
   .footer-dot { width: 5px; height: 5px; border-radius: 50%; background: linear-gradient(var(--teal), var(--purple)); }
- 
+
   /* ── MOBILE ── */
   @media (max-width: 768px) {
     .header { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
@@ -405,13 +405,13 @@
 </style>
 </head>
 <body>
- 
+
 <div class="loading-overlay" id="loading-overlay">
   <div class="loading-spinner"></div>
   <div class="loading-text">Connecting to database...</div>
 </div>
 <div class="toast" id="toast"></div>
- 
+
 <!-- HEADER -->
 <div class="header">
   <div class="header-left">
@@ -432,7 +432,7 @@
     </div>
   </div>
 </div>
- 
+
 <!-- STATS BAR -->
 <div class="stats-bar">
   <div class="stat-item"><div class="stat-value sv-default" id="stat-total">17</div><div class="stat-label">Total Episodes</div></div>
@@ -442,7 +442,7 @@
   <div class="stat-item"><div class="stat-value sv-red"     id="stat-overdue">—</div><div class="stat-label">Overdue</div></div>
   <div class="stat-item"><div class="stat-value sv-purple"  id="stat-unassigned">—</div><div class="stat-label">Unassigned</div></div>
 </div>
- 
+
 <!-- CONTROLS -->
 <div class="controls">
   <label>Editor</label>
@@ -469,10 +469,10 @@
   <button class="ctrl-btn" onclick="toggleAll(true)">Expand All</button>
   <button class="ctrl-btn" onclick="clearFilters()">Clear Filters</button>
 </div>
- 
+
 <!-- MAIN -->
 <div class="main">
- 
+
   <!-- WORKFLOW BANNER -->
   <div class="workflow-banner">
     <div class="wf-title">Review & Approval Flow</div>
@@ -490,7 +490,7 @@
       <span class="wf-step s6">Scheduled</span>
     </div>
   </div>
- 
+
   <!-- BATCH: RUSH -->
   <div class="batch-section" id="section-rush">
     <div class="batch-header rush" onclick="toggleSection('rush')">
@@ -512,7 +512,7 @@
       </table>
     </div>
   </div>
- 
+
   <!-- BATCH 2 -->
   <div class="batch-section" id="section-batch2">
     <div class="batch-header batch2" onclick="toggleSection('batch2')">
@@ -535,7 +535,7 @@
       </table>
     </div>
   </div>
- 
+
   <!-- BATCH 3 -->
   <div class="batch-section" id="section-batch3">
     <div class="batch-header batch3" onclick="toggleSection('batch3')">
@@ -558,7 +558,7 @@
       </table>
     </div>
   </div>
- 
+
   <!-- BATCH 4 -->
   <div class="batch-section" id="section-batch4">
     <div class="batch-header batch4" onclick="toggleSection('batch4')">
@@ -581,7 +581,7 @@
       </table>
     </div>
   </div>
- 
+
   <!-- BATCH 5 -->
   <div class="batch-section" id="section-batch5">
     <div class="batch-header batch5" onclick="toggleSection('batch5')">
@@ -604,14 +604,14 @@
       </table>
     </div>
   </div>
- 
+
 </div>
- 
+
 <div class="footer">
   <div class="footer-brand"><div class="footer-dot"></div><span>We Sound Crazy x Walton Creative Group — Post-Production Manager</span></div>
   <div>Frame.io review centralized &nbsp;·&nbsp; Final approval: WSC Hosts &nbsp;·&nbsp; First review: Lamont Baldwin + Aaron Walton</div>
 </div>
- 
+
 <script>
 const EPISODE_DEFS = {
   rush: [
@@ -642,7 +642,7 @@ const EPISODE_DEFS = {
     { id:'b5e2', num:2, guest:'Travis Malloy', note:'Filming 4/9 ATL', airDate:'2026-07-23', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
   ],
 };
- 
+
 const LINK_FIELDS = [
   { key: 'frameio',  label: 'Frame.io Review Link' },
   { key: 'v1',       label: 'V1 Cut' },
@@ -651,7 +651,7 @@ const LINK_FIELDS = [
   { key: 'social',   label: 'Social Clips' },
   { key: 'drive',    label: 'Drive / Raw Footage' },
 ];
- 
+
 const EPISODES = JSON.parse(JSON.stringify(EPISODE_DEFS));
 const EP_INDEX = {};
 Object.keys(EPISODES).forEach(bk => EPISODES[bk].forEach(ep => EP_INDEX[ep.id] = { batchKey: bk, ep }));
@@ -660,8 +660,7 @@ const STATUSES = ['Not Started','In Progress','Rough Cut','In Review','Host Revi
 const TODAY    = new Date('2026-04-13');
 const TABLE    = 'wsc_episodes';
 let db = null;
- 
-// ── SUPABASE ──────────────────────────────────────────────────────────
+
 async function initSupabase() {
   if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
     setSyncStatus('offline','Local only'); hideLoading(); renderAll(); return;
@@ -693,7 +692,7 @@ async function initSupabase() {
     showToast('Could not connect to database. Running in local mode.','error');
   }
 }
- 
+
 function subscribeRealtime() {
   if (!db) return;
   db.channel('wsc_episodes_changes')
@@ -723,7 +722,7 @@ function subscribeRealtime() {
       showToast(`${ep.guest} updated remotely`, 'info');
     }).subscribe();
 }
- 
+
 async function upsertEpisode(ep) {
   if (!db) return;
   setSyncDot('syncing');
@@ -738,8 +737,7 @@ async function upsertEpisode(ep) {
   if (error) { showToast('Sync failed — change saved locally', 'error'); setSyncDot('error'); }
   else { setSyncDot('connected'); setLastUpdated(); }
 }
- 
-// ── HELPERS ──────────────────────────────────────────────────────────
+
 function parseDateStr(s) { if (!s) return null; const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
 function formatDate(s) { if (!s) return '—'; return parseDateStr(s).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
 function daysUntil(s) { if (!s) return null; return Math.floor((parseDateStr(s)-TODAY)/86400000); }
@@ -754,8 +752,7 @@ function daysChip(days, status) {
 function editorOptions(sel) { return EDITORS.map(e=>`<option value="${e}"${e===sel?' selected':''}>${e}</option>`).join(''); }
 function statusOptions(sel) { return STATUSES.map(s=>`<option value="${s}"${s===sel?' selected':''}>${s}</option>`).join(''); }
 function hasLinks(links) { return links && Object.values(links).some(v => v && v.trim()); }
- 
-// ── RENDER ────────────────────────────────────────────────────────────
+
 function renderRow(ep, batchKey) {
   const days = daysUntil(ep.editDeadline);
   const overdue = days!==null && days<0 && ep.status!=='Delivered' && ep.status!=='Approved';
@@ -816,7 +813,7 @@ function renderRow(ep, batchKey) {
     </td>
   </tr>`;
 }
- 
+
 function toggleLinks(id) {
   const panelRow = document.getElementById(`links-panel-${id}`);
   if (!panelRow) return;
@@ -827,7 +824,7 @@ function toggleLinks(id) {
   const ep = entry.ep;
   if (btn) btn.textContent = isOpen ? (hasLinks(ep.links) ? 'View Assets' : 'Add Links') : 'Close';
 }
- 
+
 function updateLink(id, key, value) {
   const entry = EP_INDEX[id]; if (!entry) return;
   const ep = entry.ep;
@@ -839,23 +836,29 @@ function updateLink(id, key, value) {
   if (btn) { btn.classList.toggle('has-links', hasLinks(ep.links)); btn.textContent = hasLinks(ep.links) ? 'Close' : 'Close'; }
   upsertEpisode(ep);
 }
- 
+
 function renderBatch(bk) {
   const tbody = document.getElementById(`rows-${bk}`);
   if (!tbody) return;
   tbody.innerHTML = EPISODES[bk].map(ep => renderRow(ep, bk)).join('');
-  // Event delegation — catches drops on td children too
-  tbody.ondragover = e => {
-    const tr = e.target.closest('.ep-row');
-    if (tr) { e.preventDefault(); onDragOver(e, tr.dataset.id); }
-  };
-  tbody.ondrop = e => {
-    const tr = e.target.closest('.ep-row');
-    if (tr) onDrop(e, tr.dataset.id, tr.dataset.batch);
-  };
 }
-function renderAll() { Object.keys(EPISODES).forEach(renderBatch); updateStats(); updateBatchProgress(); }
- 
+function renderAll() { Object.keys(EPISODES).forEach(renderBatch); updateStats(); updateBatchProgress(); setupDragDelegation(); }
+
+function setupDragDelegation() {
+  document.removeEventListener('dragover', _dragOver);
+  document.removeEventListener('drop',     _dragDrop);
+  document.addEventListener('dragover', _dragOver);
+  document.addEventListener('drop',     _dragDrop);
+}
+function _dragOver(e) {
+  const tr = e.target.closest('.ep-row');
+  if (tr) { e.preventDefault(); onDragOver(e, tr.dataset.id); }
+}
+function _dragDrop(e) {
+  const tr = e.target.closest('.ep-row');
+  if (tr) onDrop(e, tr.dataset.id, tr.dataset.batch);
+}
+
 function updateField(id, field, value) {
   const entry = EP_INDEX[id]; if (!entry) return;
   const ep = entry.ep; ep[field] = value;
@@ -872,7 +875,7 @@ function updateField(id, field, value) {
   if (newTr) { newTr.dataset.editor = ep.editor; newTr.dataset.status = ep.status; }
   updateStats(); updateBatchProgress(); applyFilters(); upsertEpisode(ep);
 }
- 
+
 function updateStats() {
   const all = Object.values(EPISODES).flat();
   set('stat-delivered',  all.filter(e => e.status==='Delivered').length);
@@ -882,7 +885,7 @@ function updateStats() {
   set('stat-unassigned', all.filter(e => e.editor==='Not-Assigned'&&e.status!=='Delivered').length);
 }
 function set(id,v) { const el=document.getElementById(id); if(el) el.textContent=v; }
- 
+
 function updateBatchProgress() {
   Object.keys(EPISODES).forEach(bk => {
     const eps=EPISODES[bk], done=eps.filter(e=>e.status==='Delivered'||e.status==='Approved').length;
@@ -891,7 +894,7 @@ function updateBatchProgress() {
     if(bar) bar.style.width=pct+'%'; if(txt) txt.textContent=`${done} / ${eps.length} delivered`;
   });
 }
- 
+
 function toggleSection(key) {
   const body=document.getElementById(`body-${key}`), tog=document.getElementById(`toggle-${key}`);
   if(!body) return; const isOpen=!body.classList.contains('collapsed');
@@ -903,7 +906,7 @@ function toggleAll(open) {
     if(body) body.classList.toggle('collapsed',!open); if(tog) tog.classList.toggle('open',open);
   });
 }
- 
+
 function applyFilters() {
   const ef=document.getElementById('filter-editor').value, sf=document.getElementById('filter-status').value;
   document.querySelectorAll('.ep-row').forEach(row=>{
@@ -914,17 +917,17 @@ function applyFilters() {
   });
 }
 function clearFilters() { document.getElementById('filter-editor').value='all'; document.getElementById('filter-status').value='all'; applyFilters(); }
- 
+
 function setSyncStatus(state,label) { setSyncDot(state); const el=document.getElementById('sync-label'); if(el) el.textContent=label; }
 function setSyncDot(state) { const dot=document.getElementById('sync-dot'); if(!dot) return; dot.className='sync-dot'; if(state==='connected') dot.classList.add('connected'); if(state==='syncing') dot.classList.add('syncing'); if(state==='error') dot.classList.add('error'); }
 function hideLoading() { const ol=document.getElementById('loading-overlay'); if(ol) ol.classList.add('hidden'); }
 function setLastUpdated() { const el=document.getElementById('last-updated'); if(el) el.textContent=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}); }
 let toastTimer;
 function showToast(msg,type='info') { const t=document.getElementById('toast'); if(!t) return; t.textContent=msg; t.className=`toast ${type} show`; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3000); }
- 
+
 // ── DRAG AND DROP ────────────────────────────────────────────────────
 let dragSrcId = null, dragSrcBatch = null;
- 
+
 function onDragStart(e, id, batchKey) {
   dragSrcId = id; dragSrcBatch = batchKey;
   e.dataTransfer.effectAllowed = 'move';
@@ -934,7 +937,7 @@ function onDragStart(e, id, batchKey) {
     if (r) r.classList.add('dragging');
   }, 0);
 }
- 
+
 function onDragOver(e, id) {
   e.preventDefault(); e.dataTransfer.dropEffect = 'move';
   document.querySelectorAll('.ep-row.drag-over').forEach(r => r.classList.remove('drag-over'));
@@ -943,27 +946,44 @@ function onDragOver(e, id) {
     if (r) r.classList.add('drag-over');
   }
 }
- 
+
 function onDrop(e, id, batchKey) {
   e.preventDefault();
   document.querySelectorAll('.ep-row').forEach(r => r.classList.remove('dragging','drag-over'));
-  if (!dragSrcId || dragSrcId === id || dragSrcBatch !== batchKey) return;
-  const arr = EPISODES[batchKey];
-  const fromIdx = arr.findIndex(ep => ep.id === dragSrcId);
-  const toIdx   = arr.findIndex(ep => ep.id === id);
-  if (fromIdx < 0 || toIdx < 0) return;
-  const [moved] = arr.splice(fromIdx, 1);
-  arr.splice(toIdx, 0, moved);
-  renderBatch(batchKey);
-  applyFilters();
-  showToast('Order updated', 'success');
+  if (!dragSrcId || dragSrcId === id) return;
+
+  const srcBatch = dragSrcBatch;
+  const dstBatch = batchKey;
+  const srcArr   = EPISODES[srcBatch];
+  const dstArr   = EPISODES[dstBatch];
+  const fromIdx  = srcArr.findIndex(ep => ep.id === dragSrcId);
+  if (fromIdx < 0) return;
+
+  const [moved] = srcArr.splice(fromIdx, 1);
+
+  if (srcBatch === dstBatch) {
+    const toIdx = dstArr.findIndex(ep => ep.id === id);
+    if (toIdx < 0) { srcArr.splice(fromIdx, 0, moved); return; }
+    dstArr.splice(toIdx, 0, moved);
+    renderBatch(dstBatch);
+  } else {
+    EP_INDEX[moved.id].batchKey = dstBatch;
+    const toIdx = dstArr.findIndex(ep => ep.id === id);
+    toIdx < 0 ? dstArr.push(moved) : dstArr.splice(toIdx, 0, moved);
+    renderBatch(srcBatch);
+    renderBatch(dstBatch);
+  }
+
+  applyFilters(); updateStats(); updateBatchProgress();
+  const label = dstBatch === 'rush' ? 'Immediate Priorities' : dstBatch.replace('batch', 'Batch ');
+  showToast(`${moved.guest} moved to ${label}`, 'success');
 }
- 
+
 function onDragEnd() {
   document.querySelectorAll('.ep-row').forEach(r => r.classList.remove('dragging','drag-over'));
   dragSrcId = null; dragSrcBatch = null;
 }
- 
+
 // ── EDITABLE DATES ───────────────────────────────────────────────────
 function editDate(id, field, spanEl) {
   const entry = EP_INDEX[id]; if (!entry) return;
@@ -979,7 +999,6 @@ function editDate(id, field, spanEl) {
   function commit() {
     const val = input.value || null;
     ep[field] = val;
-    // Re-render the row
     const tr = document.querySelector(`tr[data-id="${id}"]`);
     if (tr) {
       const panelRow = document.getElementById(`links-panel-${id}`);
@@ -997,7 +1016,7 @@ function editDate(id, field, spanEl) {
   input.addEventListener('blur', () => { if (document.activeElement !== input) commit(); });
   input.addEventListener('keydown', e => { if (e.key === 'Escape') { ep[field] = current; renderBatch(entry.batchKey); } });
 }
- 
+
 initSupabase();
 </script>
 </body>
