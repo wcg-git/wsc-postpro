@@ -851,8 +851,9 @@ function setupDragDelegation() {
   document.addEventListener('drop',     _dragDrop);
 }
 function _dragOver(e) {
+  if (dragSrcId) e.preventDefault();
   const tr = e.target.closest('.ep-row');
-  if (tr) { e.preventDefault(); onDragOver(e, tr.dataset.id); }
+  if (tr) onDragOver(e, tr.dataset.id);
 }
 function _dragDrop(e) {
   const tr = e.target.closest('.ep-row');
