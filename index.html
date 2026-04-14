@@ -338,7 +338,7 @@
   }
   .drag-handle:hover { color: var(--teal); }
   .drag-handle:active { cursor: grabbing; }
-  .ep-num-cell { display: flex; align-items: center; gap: 4px; }
+  .ep-num-cell { display: flex; align-items: center; gap: 4px; width: 52px; min-width: 52px; }
  
   /* Editable dates */
   .date-editable {
@@ -507,7 +507,7 @@
     </div>
     <div class="batch-body" id="body-rush">
       <table class="ep-table">
-        <thead><tr><th style="width:32px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-rush"></tbody>
       </table>
     </div>
@@ -530,7 +530,7 @@
     </div>
     <div class="batch-body" id="body-batch2">
       <table class="ep-table">
-        <thead><tr><th style="width:32px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch2"></tbody>
       </table>
     </div>
@@ -553,7 +553,7 @@
     </div>
     <div class="batch-body" id="body-batch3">
       <table class="ep-table">
-        <thead><tr><th style="width:32px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch3"></tbody>
       </table>
     </div>
@@ -576,7 +576,7 @@
     </div>
     <div class="batch-body" id="body-batch4">
       <table class="ep-table">
-        <thead><tr><th style="width:32px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch4"></tbody>
       </table>
     </div>
@@ -599,7 +599,7 @@
     </div>
     <div class="batch-body" id="body-batch5">
       <table class="ep-table">
-        <thead><tr><th style="width:32px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch5"></tbody>
       </table>
     </div>
@@ -763,8 +763,6 @@ function renderRow(ep, batchKey) {
   return `<tr class="ep-row${overdue?' ep-overdue':''}" data-id="${ep.id}" data-batch="${batchKey}" data-editor="${ep.editor}" data-status="${ep.status}"
     draggable="true"
     ondragstart="onDragStart(event,'${ep.id}','${batchKey}')"
-    ondragover="onDragOver(event,'${ep.id}')"
-    ondrop="onDrop(event,'${ep.id}','${batchKey}')"
     ondragend="onDragEnd()">
     <td class="ep-num ep-num-cell" data-label="#">
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
@@ -844,7 +842,17 @@ function updateLink(id, key, value) {
  
 function renderBatch(bk) {
   const tbody = document.getElementById(`rows-${bk}`);
-  if (tbody) tbody.innerHTML = EPISODES[bk].map(ep => renderRow(ep, bk)).join('');
+  if (!tbody) return;
+  tbody.innerHTML = EPISODES[bk].map(ep => renderRow(ep, bk)).join('');
+  // Event delegation — catches drops on td children too
+  tbody.ondragover = e => {
+    const tr = e.target.closest('.ep-row');
+    if (tr) { e.preventDefault(); onDragOver(e, tr.dataset.id); }
+  };
+  tbody.ondrop = e => {
+    const tr = e.target.closest('.ep-row');
+    if (tr) onDrop(e, tr.dataset.id, tr.dataset.batch);
+  };
 }
 function renderAll() { Object.keys(EPISODES).forEach(renderBatch); updateStats(); updateBatchProgress(); }
  
