@@ -1261,7 +1261,7 @@ async function sendChat() {
         'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoemx3d3N2cWxkaG16cWx1eXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTAzODUsImV4cCI6MjA5MTU2NjM4NX0.gspAUAxMwA-N8V71BlADbmdC9THa5yT6MrjTgJI2YBo`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 1000,
         system: `You are the WSC Post-Production Assistant embedded in the We Sound Crazy podcast production dashboard. You help the production team (Aaron Walton, Lamont Baldwin) track episodes, deadlines, and assignments. Be concise, direct, and helpful. Use plain text — no markdown headers or bullet asterisks. Here is the live dashboard data:\n\n${buildDashboardContext()}`,
         messages: chatHistory.slice(-10)
