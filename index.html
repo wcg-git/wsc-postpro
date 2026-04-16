@@ -682,6 +682,14 @@ async function initSupabase() {
         if (row.edit_deadline) ep.editDeadline = row.edit_deadline;
         try { ep.links = row.asset_links ? JSON.parse(row.asset_links) : {}; } catch(e) { ep.links = {}; }
         if (row.ep_index !== null && row.ep_index !== undefined) ep.epIndex = row.ep_index;
+        // Restore cross-batch moves
+        if (row.batch && row.batch !== entry.batchKey && EPISODES[row.batch]) {
+          const srcArr = EPISODES[entry.batchKey];
+          const idx = srcArr.findIndex(e => e.id === ep.id);
+          if (idx >= 0) srcArr.splice(idx, 1);
+          EPISODES[row.batch].push(ep);
+          entry.batchKey = row.batch;
+        }
       });
     }
     // Sort each batch by saved ep_index
