@@ -752,7 +752,7 @@ const EDITORS  = ['Hyyer Creative', 'Lamont Baldwin', 'Not-Assigned'];
 const STATUSES = ['Not Started','In Progress','Rough Cut','In Review','Host Review','Approved','Delivered'];
 const TODAY    = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); })();
 const TABLE    = 'wsc_episodes';
-const SLACK_WEBHOOK = ''; // Paste your Slack Incoming Webhook URL here
+const SLACK_WEBHOOK = ['https://hooks.slack.com/services','T06CTB9USQN','B0ATEGHPJ74','i5wA9xG1i5TtZp4olyk4jV2z'].join('/');
 let db = null;
 
 async function initSupabase() {
