@@ -681,8 +681,13 @@ async function initSupabase() {
         if (row.air_date)      ep.airDate      = row.air_date;
         if (row.edit_deadline) ep.editDeadline = row.edit_deadline;
         try { ep.links = row.asset_links ? JSON.parse(row.asset_links) : {}; } catch(e) { ep.links = {}; }
+        if (row.ep_index !== null && row.ep_index !== undefined) ep.epIndex = row.ep_index;
       });
     }
+    // Sort each batch by saved ep_index
+    Object.keys(EPISODES).forEach(bk => {
+      EPISODES[bk].sort((a, b) => (a.epIndex ?? 999) - (b.epIndex ?? 999));
+    });
     setSyncStatus('connected','Live sync on');
     hideLoading(); renderAll(); subscribeRealtime();
   } catch (err) {
@@ -732,6 +737,7 @@ async function upsertEpisode(ep) {
     ep_notes: ep.epNotes, asset_links: JSON.stringify(ep.links || {}),
     air_date: ep.airDate || null,
     edit_deadline: ep.editDeadline || null,
+    ep_index: ep.epIndex ?? 0,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'id' });
   if (error) { showToast('Sync failed — change saved locally', 'error'); setSyncDot('error'); }
@@ -976,8 +982,18 @@ function onDrop(e, id, batchKey) {
   }
 
   applyFilters(); updateStats(); updateBatchProgress();
+  // Persist new order for affected batches
+  saveBatchOrder(dstBatch);
+  if (srcBatch !== dstBatch) saveBatchOrder(srcBatch);
   const label = dstBatch === 'rush' ? 'Immediate Priorities' : dstBatch.replace('batch', 'Batch ');
   showToast(`${moved.guest} moved to ${label}`, 'success');
+}
+
+function saveBatchOrder(bk) {
+  EPISODES[bk].forEach((ep, i) => {
+    ep.epIndex = i;
+    upsertEpisode(ep);
+  });
 }
 
 function onDragEnd() {
