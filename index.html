@@ -413,6 +413,13 @@
     transition: transform 0.2s, box-shadow 0.2s; color: white; font-size: 20px;
   }
   .chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .chat-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--red); color: white; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Sans', sans-serif; border: 2px solid var(--white);
+  }
   .chat-panel {
     position: fixed; bottom: 84px; right: 24px; z-index: 500;
     width: 360px; height: 520px; background: var(--white);
@@ -745,6 +752,7 @@ const EDITORS  = ['Hyyer Creative', 'Lamont Baldwin', 'Not-Assigned'];
 const STATUSES = ['Not Started','In Progress','Rough Cut','In Review','Host Review','Approved','Delivered'];
 const TODAY    = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); })();
 const TABLE    = 'wsc_episodes';
+const SLACK_WEBHOOK = ''; // Paste your Slack Incoming Webhook URL here
 let db = null;
 
 async function initSupabase() {
@@ -1181,10 +1189,13 @@ async function sendChat() {
       })
     });
     const data = await res.json();
-    const reply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
+    const rawReply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
+    const isUnanswerable = rawReply.startsWith('[UNANSWERABLE]');
+    const reply = rawReply.replace(/^\[UNANSWERABLE\]\s*/, '');
     typingEl.remove();
     appendChatMsg('assistant', reply);
     chatHistory.push({ role: 'assistant', content: reply });
+    if (isUnanswerable) flagQuestion(msg);
   } catch(err) {
     typingEl.remove();
     appendChatMsg('assistant', 'Connection error. Please try again.');
@@ -1205,6 +1216,33 @@ function appendChatMsg(role, text) {
   container.appendChild(wrapper);
   container.scrollTop = container.scrollHeight;
   return wrapper;
+}
+
+async function flagQuestion(question) {
+  // Log to Supabase
+  if (db) {
+    await db.from('chat_flags').insert({ question });
+  }
+  // Ping Slack
+  if (SLACK_WEBHOOK) {
+    fetch(SLACK_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: `*WSC Assistant — Unanswerable Question* :wave:
+>${question}
+_The assistant couldn't answer this from dashboard data. You may want to follow up._`
+      })
+    }).catch(() => {});
+  }
+  // Show badge on FAB
+  const fab = document.querySelector('.chat-fab');
+  if (fab && !fab.querySelector('.chat-badge')) {
+    const badge = document.createElement('span');
+    badge.className = 'chat-badge';
+    badge.textContent = '!';
+    fab.appendChild(badge);
+  }
 }
 
 function appendTyping() {
