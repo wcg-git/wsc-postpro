@@ -452,6 +452,15 @@
   .chat-typing span { width: 6px; height: 6px; background: var(--text-dim); border-radius: 50%; animation: chatbounce 1.2s infinite; }
   .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
   .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+  .chat-msg.flagged .chat-bubble {
+    background: #FEF9E6;
+    border: 1px solid #E8D898;
+    color: #8A6B00;
+  }
+  .chat-flag-note {
+    font-size: 10px; color: var(--text-dim); margin-top: 3px;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
   @keyframes chatbounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
   .chat-input-row {
     padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0;
@@ -1257,9 +1266,11 @@ async function sendChat() {
     const data = await res.json();
     const rawReply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
     const isUnanswerable = rawReply.startsWith('[UNANSWERABLE]');
-    const reply = rawReply.replace(/^\[UNANSWERABLE\]\s*/, '');
+    const reply = isUnanswerable
+      ? "That's outside what I can answer from the dashboard, but I've flagged it for the team to follow up."
+      : rawReply;
     typingEl.remove();
-    appendChatMsg('assistant', reply);
+    appendChatMsg('assistant', reply, isUnanswerable);
     chatHistory.push({ role: 'assistant', content: reply });
     if (isUnanswerable) flagQuestion(msg);
   } catch(err) {
@@ -1271,14 +1282,20 @@ async function sendChat() {
   input.focus();
 }
 
-function appendChatMsg(role, text) {
+function appendChatMsg(role, text, flagged = false) {
   const container = document.getElementById('chat-messages');
   const wrapper = document.createElement('div');
-  wrapper.className = `chat-msg ${role}`;
+  wrapper.className = `chat-msg ${role}${flagged ? ' flagged' : ''}`;
   const bubble = document.createElement('div');
   bubble.className = 'chat-bubble';
   bubble.textContent = text;
   wrapper.appendChild(bubble);
+  if (flagged) {
+    const note = document.createElement('div');
+    note.className = 'chat-flag-note';
+    note.textContent = 'Question flagged for team review';
+    wrapper.appendChild(note);
+  }
   container.appendChild(wrapper);
   container.scrollTop = container.scrollHeight;
   return wrapper;
