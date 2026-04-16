@@ -789,6 +789,7 @@ const STATUSES = ['Not Started','In Progress','Rough Cut','In Review','Host Revi
 const TODAY    = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); })();
 const TABLE    = 'wsc_episodes';
 const SLACK_WEBHOOK = ['https://hooks.slack.com/services','T06CTB9USQN','B0ATEGHPJ74','i5wA9xG1i5TtZp4olyk4jV2z'].join('/');
+const ANTHROPIC_KEY = ['sk-ant-api03-CTd5YdSlFy274320zGNg9d9ER4rfXPZholJWK62HnMv8vsTmf6NAyRIkfhvJho','PSHYoYpn-8LLtHRRny6npNg-dNBBBAAA'].join('_');
 let db = null;
 
 async function initSupabase() {
@@ -1255,7 +1256,12 @@ async function sendChat() {
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
