@@ -402,6 +402,74 @@
     .stat-item:nth-child(odd) { border-right: none; }
     .batch-chip { font-size: 10px; }
   }
+
+  /* ── AI CHAT BOT ── */
+  .chat-fab {
+    position: fixed; bottom: 24px; right: 24px; z-index: 500;
+    width: 48px; height: 48px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--teal), var(--purple));
+    border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s; color: white; font-size: 20px;
+  }
+  .chat-fab:hover { transform: scale(1.08); box-shadow: 0 6px 20px rgba(0,0,0,0.22); }
+  .chat-panel {
+    position: fixed; bottom: 84px; right: 24px; z-index: 500;
+    width: 360px; height: 520px; background: var(--white);
+    border: 1px solid var(--border); border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.14); display: flex; flex-direction: column;
+    overflow: hidden; transition: opacity 0.2s, transform 0.2s;
+  }
+  .chat-panel.hidden { opacity: 0; pointer-events: none; transform: translateY(10px); }
+  .chat-header {
+    padding: 13px 16px; background: linear-gradient(135deg, var(--teal), var(--purple));
+    color: white; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .chat-header-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; }
+  .chat-header-sub { font-size: 10px; opacity: 0.85; margin-top: 1px; }
+  .chat-close { background: none; border: none; color: white; cursor: pointer; font-size: 18px; padding: 0; opacity: 0.8; line-height: 1; }
+  .chat-close:hover { opacity: 1; }
+  .chat-messages {
+    flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .chat-msg { display: flex; flex-direction: column; gap: 2px; max-width: 85%; }
+  .chat-msg.user { align-self: flex-end; align-items: flex-end; }
+  .chat-msg.assistant { align-self: flex-start; align-items: flex-start; }
+  .chat-bubble {
+    padding: 9px 12px; border-radius: 10px; font-size: 12px; line-height: 1.5;
+    font-family: 'IBM Plex Sans', sans-serif; white-space: pre-wrap; word-break: break-word;
+  }
+  .chat-msg.user .chat-bubble { background: linear-gradient(135deg, var(--teal), var(--purple)); color: white; border-bottom-right-radius: 3px; }
+  .chat-msg.assistant .chat-bubble { background: var(--bg-section); color: var(--text); border: 1px solid var(--border); border-bottom-left-radius: 3px; }
+  .chat-typing { display: flex; gap: 4px; align-items: center; padding: 10px 12px; background: var(--bg-section); border: 1px solid var(--border); border-radius: 10px; border-bottom-left-radius: 3px; }
+  .chat-typing span { width: 6px; height: 6px; background: var(--text-dim); border-radius: 50%; animation: chatbounce 1.2s infinite; }
+  .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes chatbounce { 0%,80%,100%{transform:translateY(0)} 40%{transform:translateY(-5px)} }
+  .chat-input-row {
+    padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; flex-shrink: 0;
+  }
+  .chat-input {
+    flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; color: var(--text);
+    resize: none; outline: none; min-height: 36px; max-height: 80px; line-height: 1.4;
+    transition: border-color 0.12s; background: var(--bg-section);
+  }
+  .chat-input:focus { border-color: var(--teal); }
+  .chat-input::placeholder { color: var(--text-dim); }
+  .chat-send {
+    background: linear-gradient(135deg, var(--teal), var(--purple)); border: none;
+    color: white; border-radius: 6px; width: 36px; height: 36px; cursor: pointer;
+    font-size: 16px; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: opacity 0.12s;
+  }
+  .chat-send:hover { opacity: 0.88; }
+  .chat-send:disabled { opacity: 0.4; cursor: not-allowed; }
+  .chat-welcome { font-size: 11px; color: var(--text-muted); text-align: center; padding: 8px 12px; line-height: 1.5; }
+  @media (max-width: 480px) {
+    .chat-panel { width: calc(100vw - 32px); right: 16px; bottom: 80px; }
+    .chat-fab { right: 16px; bottom: 16px; }
+  }
 </style>
 </head>
 <body>
@@ -1042,7 +1110,116 @@ function editDate(id, field, spanEl) {
   input.addEventListener('keydown', e => { if (e.key === 'Escape') { ep[field] = current; renderBatch(entry.batchKey); } });
 }
 
+
+// ── AI CHAT BOT ─────────────────────────────────────────────────────
+let chatOpen = false;
+let chatHistory = [];
+
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chat-panel').classList.toggle('hidden', !chatOpen);
+  if (chatOpen) document.getElementById('chat-input').focus();
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function buildDashboardContext() {
+  const today = new Date();
+  const todayStr = today.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  const allEps = Object.entries(EPISODES).flatMap(([bk, eps]) =>
+    eps.map(ep => {
+      const days = daysUntil(ep.editDeadline);
+      return `- [${bk.toUpperCase()}] ${ep.guest} | Editor: ${ep.editor} | Status: ${ep.status} | Edit Deadline: ${ep.editDeadline || 'none'} | Air: ${ep.airDate || 'none'} | Days Left: ${days !== null ? days + 'd' : 'n/a'} | Clips: ${ep.clips ? 'Ready' : 'Pending'} | Notes: ${ep.epNotes || 'none'}`;
+    })
+  ).join('\n');
+  return `Today is ${todayStr}.\n\nWSC Post-Production Dashboard — Current Episode Data:\n${allEps}\n\nBatch summaries:\n- Immediate Priorities (Rush): 3 episodes, rush deadlines\n- Batch 2: Deliver by Apr 20, Air Apr 30–May 21, Hyyer Creative\n- Batch 3: Deliver by Apr 30, Air May 28–Jun 11, LA+ATL split\n- Batch 4: Deliver by May 21, Air Jun 18–Jul 9, pending Batch 3 review\n- Batch 5: Deliver by Jun 18, Air Jul 16–Jul 23, pending Batch 3 review\n\nWorkflow: Raw Footage → Editor Rough Cut → Lamont + Aaron Walton Review → Revisions → Host Approval → Scheduled\nFirst reviewers: Lamont Baldwin + Aaron Walton. Final approval: WSC Hosts (Phil, Claude Kelly, Chuck Harmony, Tamone/Bacon).`;
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('chat-send-btn').disabled = true;
+
+  appendChatMsg('user', msg);
+  chatHistory.push({ role: 'user', content: msg });
+
+  const typingEl = appendTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are the WSC Post-Production Assistant embedded in the We Sound Crazy podcast production dashboard. You help the production team (Aaron Walton, Lamont Baldwin) track episodes, deadlines, and assignments. Be concise, direct, and helpful. Use plain text — no markdown headers or bullet asterisks. Here is the live dashboard data:\n\n${buildDashboardContext()}`,
+        messages: chatHistory.slice(-10)
+      })
+    });
+    const data = await res.json();
+    const reply = data.content?.[0]?.text || 'Sorry, I could not get a response.';
+    typingEl.remove();
+    appendChatMsg('assistant', reply);
+    chatHistory.push({ role: 'assistant', content: reply });
+  } catch(err) {
+    typingEl.remove();
+    appendChatMsg('assistant', 'Connection error. Please try again.');
+  }
+
+  document.getElementById('chat-send-btn').disabled = false;
+  input.focus();
+}
+
+function appendChatMsg(role, text) {
+  const container = document.getElementById('chat-messages');
+  const wrapper = document.createElement('div');
+  wrapper.className = `chat-msg ${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.textContent = text;
+  wrapper.appendChild(bubble);
+  container.appendChild(wrapper);
+  container.scrollTop = container.scrollHeight;
+  return wrapper;
+}
+
+function appendTyping() {
+  const container = document.getElementById('chat-messages');
+  const wrapper = document.createElement('div');
+  wrapper.className = 'chat-msg assistant';
+  wrapper.innerHTML = '<div class="chat-typing"><span></span><span></span><span></span></div>';
+  container.appendChild(wrapper);
+  container.scrollTop = container.scrollHeight;
+  return wrapper;
+}
+
 initSupabase();
 </script>
+
+<!-- AI CHAT BOT -->
+<button class="chat-fab" onclick="toggleChat()" title="Ask the WSC Assistant">&#x1F4AC;</button>
+<div class="chat-panel hidden" id="chat-panel">
+  <div class="chat-header">
+    <div>
+      <div class="chat-header-title">WSC Assistant</div>
+      <div class="chat-header-sub">Ask anything about your episodes</div>
+    </div>
+    <button class="chat-close" onclick="toggleChat()">&#x2715;</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-welcome">Ask me about episode statuses, deadlines, assignments, or anything on this dashboard.</div>
+  </div>
+  <div class="chat-input-row">
+    <textarea class="chat-input" id="chat-input" placeholder="Ask about episodes, deadlines, status..." rows="1" onkeydown="chatKeydown(event)"></textarea>
+    <button class="chat-send" id="chat-send-btn" onclick="sendChat()">&#x27A4;</button>
+  </div>
+</div>
+
 </body>
 </html>
