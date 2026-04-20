@@ -801,7 +801,10 @@ function pingSlackUpdate(ep, field, oldVal, newVal) {
   };
   const label = fieldLabels[field] || field;
   const batchLabel = EP_INDEX[ep.id]?.batchKey?.replace('batch', 'Batch ').replace('rush', 'Immediate Priorities') || '';
-  const msg = `*WSC Dashboard Update* ✏️\n*${ep.guest}* (${batchLabel}) — ${label} changed\n*From:* ${oldVal || '—'}  →  *To:* ${newVal || '—'}`;
+  const isLink = field === 'link';
+  const msg = isLink
+    ? `*WSC Dashboard Update* 🔗\n*${ep.guest}* (${batchLabel}) — ${label} added`
+    : `*WSC Dashboard Update* ✏️\n*${ep.guest}* (${batchLabel}) — ${label} changed\n*From:* ${oldVal || '—'}  →  *To:* ${newVal || '—'}`;
   fetch(SLACK_UPDATES, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -991,6 +994,8 @@ function updateLink(id, key, value) {
   const entry = EP_INDEX[id]; if (!entry) return;
   const ep = entry.ep;
   if (!ep.links) ep.links = {};
+  const linkLabels = { frameio:'Frame.io Review Link', v1:'V1 Cut', v2:'V2 Cut', final:'Final Cut', social:'Social Clips', drive:'Drive / Raw Footage' };
+  if (value && value.trim()) pingSlackUpdate(ep, 'link', linkLabels[key] || key, value);
   ep.links[key] = value;
   const openEl = document.getElementById(`link-open-${id}-${key}`);
   if (openEl) { openEl.href = value || '#'; openEl.classList.toggle('visible', !!value); }
