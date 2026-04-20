@@ -789,8 +789,25 @@ const STATUSES = ['Not Started','In Progress','Rough Cut','In Review','Host Revi
 const TODAY    = (() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); })();
 const TABLE    = 'wsc_episodes';
 const SLACK_WEBHOOK = ['https://hooks.slack.com/services','T06CTB9USQN','B0ATEGHPJ74','i5wA9xG1i5TtZp4olyk4jV2z'].join('/');
+const SLACK_UPDATES = ['https://hooks.slack.com/services','T06CTB9USQN','B0ATW8LBRL3','6CVrvNqJ7ax6UvMeN0GyZYnl'].join('/');
 const ANTHROPIC_KEY = ['sk-ant-api03-CTd5YdSlFy274320zGNg9d9ER4rfXPZholJWK62HnMv8vsTmf6NAyRIkfhvJho','PSHYoYpn-8LLtHRRny6npNg-dNBBBAAA'].join('_');
 let db = null;
+
+function pingSlackUpdate(ep, field, oldVal, newVal) {
+  if (!SLACK_UPDATES) return;
+  const fieldLabels = {
+    editor: 'Editor', status: 'Status', clips: 'Clips',
+    epNotes: 'Notes', airDate: 'Air Date', editDeadline: 'Edit Deadline', batch: 'Batch'
+  };
+  const label = fieldLabels[field] || field;
+  const batchLabel = EP_INDEX[ep.id]?.batchKey?.replace('batch', 'Batch ').replace('rush', 'Immediate Priorities') || '';
+  const msg = `*WSC Dashboard Update* ✏️\n*${ep.guest}* (${batchLabel}) — ${label} changed\n*From:* ${oldVal || '—'}  →  *To:* ${newVal || '—'}`;
+  fetch(SLACK_UPDATES, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text: msg })
+  }).catch(() => {});
+}
 
 async function initSupabase() {
   if (SUPABASE_URL === 'YOUR_SUPABASE_URL') {
@@ -1007,7 +1024,10 @@ function _dragDrop(e) {
 
 function updateField(id, field, value) {
   const entry = EP_INDEX[id]; if (!entry) return;
-  const ep = entry.ep; ep[field] = value;
+  const ep = entry.ep;
+  const oldVal = ep[field];
+  pingSlackUpdate(ep, field, String(oldVal ?? ''), String(value ?? ''));
+  ep[field] = value;
   const tr = document.querySelector(`tr[data-id="${id}"]`);
   if (tr) {
     const panelRow = document.getElementById(`links-panel-${id}`);
@@ -1126,6 +1146,7 @@ function onDrop(e, id, batchKey) {
   if (srcBatch !== dstBatch) saveBatchOrder(srcBatch);
   const label = dstBatch === 'rush' ? 'Immediate Priorities' : dstBatch.replace('batch', 'Batch ');
   showToast(`${moved.guest} moved to ${label}`, 'success');
+  pingSlackUpdate(moved, 'batch', srcBatch.replace('batch','Batch ').replace('rush','Immediate Priorities'), label);
 }
 
 function saveBatchOrder(bk) {
