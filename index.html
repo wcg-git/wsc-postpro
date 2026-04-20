@@ -610,7 +610,7 @@
       <span class="wf-arrow">&#8594;</span>
       <span class="wf-step s2">Editor Rough Cut</span>
       <span class="wf-arrow">&#8594;</span>
-      <span class="wf-step s3">Lamont + Aaron Walton Review</span>
+      <span class="wf-step s3">Aaron Walton Review</span>
       <span class="wf-arrow">&#8594;</span>
       <span class="wf-step s4">Revisions</span>
       <span class="wf-arrow">&#8594;</span>
@@ -738,7 +738,7 @@
 
 <div class="footer">
   <div class="footer-brand"><div class="footer-dot"></div><span>We Sound Crazy x Walton Creative Group — Post-Production Manager</span></div>
-  <div>Frame.io review centralized &nbsp;·&nbsp; Final approval: WSC Hosts &nbsp;·&nbsp; First review: Lamont Baldwin + Aaron Walton</div>
+  <div>Frame.io review centralized &nbsp;·&nbsp; Final approval: WSC Hosts &nbsp;·&nbsp; First review: Aaron Walton</div>
 </div>
 
 <script>
@@ -1262,7 +1262,7 @@ function buildDashboardContext() {
       return `- [${bk.toUpperCase()}] ${ep.guest} | Editor: ${ep.editor} | Status: ${ep.status} | Edit Deadline: ${ep.editDeadline || 'none'} | Air: ${ep.airDate || 'none'} | Days Left: ${days !== null ? days + 'd' : 'n/a'} | Clips: ${ep.clips ? 'Ready' : 'Pending'} | Notes: ${ep.epNotes || 'none'}`;
     })
   ).join('\n');
-  return `Today is ${todayStr}.\n\nWSC Post-Production Dashboard — Current Episode Data:\n${allEps}\n\nBatch summaries:\n- Immediate Priorities (Rush): 3 episodes, rush deadlines\n- Batch 2: Deliver by Apr 20, Air Apr 30–May 21, Hyyer Creative\n- Batch 3: Deliver by Apr 30, Air May 28–Jun 11, LA+ATL split\n- Batch 4: Deliver by May 21, Air Jun 18–Jul 9, pending Batch 3 review\n- Batch 5: Deliver by Jun 18, Air Jul 16–Jul 23, pending Batch 3 review\n\nWorkflow: Raw Footage → Editor Rough Cut → Lamont + Aaron Walton Review → Revisions → Host Approval → Scheduled\nFirst reviewers: Lamont Baldwin + Aaron Walton. Final approval: WSC Hosts (Phil, Claude Kelly, Chuck Harmony, Tamone/Bacon).`;
+  return `Today is ${todayStr}.\n\nWSC Post-Production Dashboard — Current Episode Data:\n${allEps}\n\nBatch summaries:\n- Immediate Priorities (Rush): 3 episodes, rush deadlines\n- Batch 2: Deliver by Apr 20, Air Apr 30–May 21, Hyyer Creative\n- Batch 3: Deliver by Apr 30, Air May 28–Jun 11, LA+ATL split\n- Batch 4: Deliver by May 21, Air Jun 18–Jul 9, pending Batch 3 review\n- Batch 5: Deliver by Jun 18, Air Jul 16–Jul 23, pending Batch 3 review\n\nWorkflow: Raw Footage → Editor Rough Cut → Aaron Walton Review → Revisions → Host Approval → Scheduled\nFirst reviewers: Lamont Baldwin + Aaron Walton. Final approval: WSC Hosts (Phil, Claude Kelly, Chuck Harmony, Tamone/Bacon).`;
 }
 
 async function sendChat() {
