@@ -805,10 +805,10 @@ function pingSlackUpdate(ep, field, oldVal, newVal) {
   const msg = isLink
     ? `*WSC Dashboard Update* 🔗\n*${ep.guest}* (${batchLabel}) — ${label} added`
     : `*WSC Dashboard Update* ✏️\n*${ep.guest}* (${batchLabel}) — ${label} changed\n*From:* ${oldVal || '—'}  →  *To:* ${newVal || '—'}`;
-  fetch(SLACK_UPDATES, {
+  fetch('https://jhzlwwsvqldhmzqluypu.supabase.co/functions/v1/bright-endpoint', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: msg })
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoemx3d3N2cWxkaG16cWx1eXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTAzODUsImV4cCI6MjA5MTU2NjM4NX0.gspAUAxMwA-N8V71BlADbmdC9THa5yT6MrjTgJI2YBo' },
+    body: JSON.stringify({ slack_webhook: SLACK_UPDATES, slack_message: msg })
   }).catch(() => {});
 }
 
@@ -1338,13 +1338,12 @@ async function flagQuestion(question) {
   }
   // Ping Slack
   if (SLACK_WEBHOOK) {
-    fetch(SLACK_WEBHOOK, {
+    fetch('https://jhzlwwsvqldhmzqluypu.supabase.co/functions/v1/bright-endpoint', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Impoemx3d3N2cWxkaG16cWx1eXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5OTAzODUsImV4cCI6MjA5MTU2NjM4NX0.gspAUAxMwA-N8V71BlADbmdC9THa5yT6MrjTgJI2YBo' },
       body: JSON.stringify({
-        text: `*WSC Assistant — Unanswerable Question* :wave:
->${question}
-_The assistant couldn't answer this from dashboard data. You may want to follow up._`
+        slack_webhook: SLACK_WEBHOOK,
+        slack_message: `*WSC Assistant — Unanswerable Question* :wave:\n>${question}\n_The assistant couldn't answer this from dashboard data. You may want to follow up._`
       })
     }).catch(() => {});
   }
