@@ -323,6 +323,58 @@
   }
   .link-open.visible { visibility: visible; }
 
+  /* Add / Delete episode */
+  .add-ep-row td { padding: 6px 12px; }
+  .add-ep-btn {
+    background: none; border: 1px dashed var(--border-dark);
+    color: var(--text-dim); font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px; padding: 5px 14px; border-radius: 5px;
+    cursor: pointer; transition: all 0.12s; font-weight: 500;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .add-ep-btn:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light); }
+  .delete-ep-btn {
+    background: none; border: none; color: var(--text-dim);
+    cursor: pointer; font-size: 14px; padding: 2px 6px;
+    border-radius: 3px; transition: all 0.12s; line-height: 1;
+    opacity: 0; flex-shrink: 0;
+  }
+  .ep-row:hover .delete-ep-btn { opacity: 1; }
+  .delete-ep-btn:hover { color: var(--red); background: var(--red-light); }
+
+  /* Add episode modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    z-index: 600; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-overlay.hidden { display: none; }
+  .modal-box {
+    background: var(--white); border-radius: 10px; padding: 24px;
+    width: 420px; max-width: calc(100vw - 32px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  }
+  .modal-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 16px; }
+  .modal-field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+  .modal-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .modal-input {
+    border: 1px solid var(--border); border-radius: 5px; padding: 8px 10px;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.12s;
+  }
+  .modal-input:focus { border-color: var(--teal); }
+  .modal-select { appearance: auto; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+  .modal-cancel {
+    background: var(--white); border: 1px solid var(--border); color: var(--text-muted);
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; padding: 8px 16px;
+    border-radius: 5px; cursor: pointer; font-weight: 500;
+  }
+  .modal-save {
+    background: linear-gradient(135deg, var(--teal), var(--purple)); border: none; color: white;
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; padding: 8px 16px;
+    border-radius: 5px; cursor: pointer; font-weight: 600;
+  }
+
   /* Overdue */
   tr.ep-overdue td:nth-child(2) .ep-name { color: var(--red); }
 
@@ -564,7 +616,7 @@
 
 <!-- STATS BAR -->
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-value sv-default" id="stat-total">17</div><div class="stat-label">Total Episodes</div></div>
+  <div class="stat-item"><div class="stat-value sv-default" id="stat-total">19</div><div class="stat-label">Total Episodes</div></div>
   <div class="stat-item"><div class="stat-value sv-green"   id="stat-delivered">—</div><div class="stat-label">Delivered</div></div>
   <div class="stat-item"><div class="stat-value sv-teal"    id="stat-inprog">—</div><div class="stat-label">In Progress</div></div>
   <div class="stat-item"><div class="stat-value sv-orange"  id="stat-review">—</div><div class="stat-label">In Review</div></div>
@@ -638,6 +690,7 @@
       <table class="ep-table">
         <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-rush"></tbody>
+        <tbody><tr id="add-row-rush"><td colspan="10"></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -648,8 +701,8 @@
       <span class="batch-toggle open" id="toggle-batch2">&#9658;</span>
       <span class="batch-name">Batch 2</span>
       <div class="batch-meta">
-        <span class="batch-chip bc-deadline">Deliver by Apr 20</span>
-        <span class="batch-chip bc-air">Air: Apr 30 – May 21</span>
+        <span class="batch-chip bc-deadline">Deliver by Apr 30</span>
+        <span class="batch-chip bc-air">Air: Apr 30 – May 28</span>
         <span class="batch-chip bc-editor">Hyyer Creative</span>
       </div>
       <div class="batch-progress-area">
@@ -661,6 +714,7 @@
       <table class="ep-table">
         <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch2"></tbody>
+        <tbody><tr id="add-row-batch2"><td colspan="10"></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -671,9 +725,9 @@
       <span class="batch-toggle open" id="toggle-batch3">&#9658;</span>
       <span class="batch-name">Batch 3</span>
       <div class="batch-meta">
-        <span class="batch-chip bc-deadline">Deliver by Apr 30</span>
-        <span class="batch-chip bc-air">Air: May 28 – Jun 11</span>
-        <span class="batch-chip bc-warn">Split: LA + ATL Teams</span>
+        <span class="batch-chip bc-deadline">Deliver by May 21</span>
+        <span class="batch-chip bc-air">Air: Jun 1 – Jun 25</span>
+        <span class="batch-chip bc-warn">Black Music Month</span>
       </div>
       <div class="batch-progress-area">
         <span class="progress-text" id="prog-text-batch3">— / 4</span>
@@ -684,6 +738,7 @@
       <table class="ep-table">
         <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch3"></tbody>
+        <tbody><tr id="add-row-batch3"><td colspan="10"></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -694,8 +749,8 @@
       <span class="batch-toggle open" id="toggle-batch4">&#9658;</span>
       <span class="batch-name">Batch 4</span>
       <div class="batch-meta">
-        <span class="batch-chip bc-deadline">Deliver by May 21</span>
-        <span class="batch-chip bc-air">Air: Jun 18 – Jul 9</span>
+        <span class="batch-chip bc-deadline">Deliver by Jun 18</span>
+        <span class="batch-chip bc-air">Air: Jul 2 – Jul 23</span>
         <span class="batch-chip bc-warn">TBD — Pending Batch 3 Review</span>
       </div>
       <div class="batch-progress-area">
@@ -707,6 +762,7 @@
       <table class="ep-table">
         <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch4"></tbody>
+        <tbody><tr id="add-row-batch4"><td colspan="10"></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -717,9 +773,7 @@
       <span class="batch-toggle open" id="toggle-batch5">&#9658;</span>
       <span class="batch-name">Batch 5</span>
       <div class="batch-meta">
-        <span class="batch-chip bc-deadline">Deliver by Jun 18</span>
-        <span class="batch-chip bc-air">Air: Jul 16 – Jul 23</span>
-        <span class="batch-chip bc-warn">TBD — Pending Batch 3 Review</span>
+        <span class="batch-chip bc-air">Reserve / Future Episodes</span>
       </div>
       <div class="batch-progress-area">
         <span class="progress-text" id="prog-text-batch5">— / 2</span>
@@ -730,6 +784,7 @@
       <table class="ep-table">
         <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch5"></tbody>
+        <tbody><tr id="add-row-batch5"><td colspan="10"></td></tr></tbody>
       </table>
     </div>
   </div>
@@ -744,32 +799,32 @@
 <script>
 const EPISODE_DEFS = {
   rush: [
-    { id:'r1', num:1, guest:'Jam & Lewis', note:'Incl. MJB + Janet social clip', airDate:null, editDeadline:'2026-04-06', editor:'Not-Assigned', status:'In Review', clips:false, epNotes:'Deadline passed — confirm delivery status', links:{} },
-    { id:'r2', num:2, guest:'Kelly Rowland', note:'First draft or final', airDate:null, editDeadline:'2026-04-10', editor:'Not-Assigned', status:'In Review', clips:false, epNotes:'Deadline passed — confirm delivery status', links:{} },
-    { id:'r3', num:3, guest:'Trevor Jackson', note:'', airDate:null, editDeadline:'2026-04-15', editor:'Hyyer Creative', status:'In Progress', clips:false, epNotes:'V1 shared — review pending', links:{} },
+    { id:'r1', num:1, guest:'Jam & Lewis', note:'Incl. MJB + Janet social clip', airDate:'2026-04-09', editDeadline:'2026-04-06', editor:'Lamont Baldwin', status:'Delivered', clips:true, epNotes:'', links:{} },
+    { id:'r2', num:2, guest:'Kelly Rowland', note:'First draft or final', airDate:'2026-04-16', editDeadline:'2026-04-10', editor:'Lamont Baldwin', status:'Delivered', clips:true, epNotes:'', links:{} },
+    { id:'r3', num:3, guest:'Trevor Jackson', note:'', airDate:'2026-04-23', editDeadline:'2026-04-15', editor:'Hyyer Creative', status:'In Progress', clips:false, epNotes:'', links:{} },
   ],
   batch2: [
-    { id:'b2e1', num:1, guest:'Mary Mary', note:'', airDate:'2026-04-30', editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b2e2', num:2, guest:'Warryn Campbell', note:'', airDate:'2026-05-28', editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b2e3', num:3, guest:'Tone Stith', note:'', airDate:'2026-05-14', editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b2e4', num:4, guest:'Kym Whitley', note:'', airDate:'2026-05-21', editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b2e1', num:1, guest:'Mary Mary', note:'', airDate:'2026-04-30', editDeadline:'2026-04-20', editor:'Hyyer Creative', status:'In Review', clips:false, epNotes:'', links:{} },
+    { id:'b3e1', num:2, guest:'Funky Dineva', note:'', airDate:'2026-05-07', editDeadline:'2026-04-30', editor:'Lamont Baldwin', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b2e3', num:3, guest:'Tone Stith', note:'', airDate:'2026-05-14', editDeadline:'2026-04-30', editor:'Hyyer Creative', status:'In Review', clips:false, epNotes:'', links:{} },
+    { id:'b2e4', num:4, guest:'Kym Whitley', note:'', airDate:'2026-05-21', editDeadline:'2026-04-30', editor:'Hyyer Creative', status:'In Progress', clips:false, epNotes:'', links:{} },
+    { id:'b2e2', num:5, guest:'Warryn Campbell', note:'', airDate:'2026-05-28', editDeadline:'2026-04-30', editor:'Hyyer Creative', status:'In Progress', clips:false, epNotes:'', links:{} },
   ],
   batch3: [
-    { id:'b3e1', num:1, guest:'Funky Dineva', note:'Filming 4/8 ATL', airDate:'2026-05-07', editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b3e2', num:2, guest:'LA Reid (Part 1)', note:'', airDate:'2026-06-01', editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b3e3', num:3, guest:'LA Reid (Part 2)', note:'', airDate:'2026-06-04', editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b3e4', num:4, guest:'Tricky Stewart', note:'Filming 4/8 ATL', airDate:'2026-06-11', editDeadline:'2026-04-30', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b3e5', num:1, guest:'The Dream', note:'Black Music Month', airDate:'2026-06-01', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b3e4', num:2, guest:'Tricky Stewart', note:'Black Music Month', airDate:'2026-06-04', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b3e2', num:3, guest:'LA Reid (Part 1)', note:'Black Music Month Kick Off', airDate:'2026-06-08', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b3e3', num:4, guest:'LA Reid (Part 2)', note:'Black Music Month', airDate:'2026-06-11', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b4e4', num:5, guest:'Keri Hilson', note:'', airDate:'2026-06-18', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b4e2', num:6, guest:'Omarion', note:'', airDate:'2026-06-25', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
   ],
   batch4: [
-    { id:'b4e1', num:1, guest:'Teedra Moses', note:'Filming 4/30 Nashville', airDate:'2026-06-18', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b4e2', num:2, guest:'Omarion', note:'Filming 4/8 ATL', airDate:'2026-06-25', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b4e3', num:3, guest:'Shannon Wallace', note:'', airDate:'2026-07-02', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b4e4', num:4, guest:'Keri Hilson', note:'Filming 4/9 ATL', airDate:'2026-07-09', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b4e5', num:1, guest:'Brian Alexander Morgan', note:'', airDate:'2026-07-02', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b5e1', num:2, guest:'Keith Robinson', note:'', airDate:'2026-07-09', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b5e2', num:3, guest:'Travis Malloy', note:'', airDate:'2026-07-16', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
+    { id:'b4e3', num:4, guest:'Shannon Wallace', note:'', airDate:'2026-07-23', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
   ],
-  batch5: [
-    { id:'b5e1', num:1, guest:'Keith Robinson', note:'Filming 4/8 ATL', airDate:'2026-07-16', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b5e2', num:2, guest:'Travis Malloy', note:'Filming 4/9 ATL', airDate:'2026-07-23', editDeadline:'2026-06-18', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-  ],
+  batch5: [],
 };
 
 const LINK_FIELDS = [
@@ -929,6 +984,7 @@ function renderRow(ep, batchKey) {
     <td class="ep-num ep-num-cell" data-label="#">
       <span class="drag-handle" title="Drag to reorder">&#8942;&#8942;</span>
       <span style="color:var(--text-dim);font-size:11px;font-family:'IBM Plex Mono',monospace;">${String(ep.num).padStart(2,'0')}</span>
+      <button class="delete-ep-btn" onclick="deleteEpisode('${ep.id}','${batchKey}')" title="Delete episode">&#x2715;</button>
     </td>
     <td data-label="Episode">
       <div class="ep-name">${ep.guest}</div>
@@ -1008,6 +1064,13 @@ function renderBatch(bk) {
   const tbody = document.getElementById(`rows-${bk}`);
   if (!tbody) return;
   tbody.innerHTML = EPISODES[bk].map(ep => renderRow(ep, bk)).join('');
+  // Add "Add Episode" row
+  const addRow = document.getElementById(`add-row-${bk}`);
+  if (addRow) {
+    addRow.innerHTML = `<td colspan="10" class="add-ep-row">
+      <button class="add-ep-btn" onclick="openAddModal('${bk}')">+ Add Episode</button>
+    </td>`;
+  }
 }
 function renderAll() { Object.keys(EPISODES).forEach(renderBatch); updateStats(); updateBatchProgress(); setupDragDelegation(); }
 
@@ -1367,8 +1430,114 @@ function appendTyping() {
   return wrapper;
 }
 
+// ── ADD / DELETE EPISODES ───────────────────────────────────────────
+let _addTargetBatch = 'batch2';
+
+function openAddModal(bk) {
+  _addTargetBatch = bk;
+  document.getElementById('modal-batch').value = bk;
+  document.getElementById('modal-guest').value = '';
+  document.getElementById('modal-note').value = '';
+  document.getElementById('modal-air').value = '';
+  document.getElementById('modal-deadline').value = '';
+  document.getElementById('modal-editor').value = 'Not-Assigned';
+  document.getElementById('add-ep-modal').classList.remove('hidden');
+  setTimeout(() => document.getElementById('modal-guest').focus(), 100);
+}
+
+function closeAddModal() {
+  document.getElementById('add-ep-modal').classList.add('hidden');
+}
+
+function saveNewEpisode() {
+  const guest = document.getElementById('modal-guest').value.trim();
+  if (!guest) { document.getElementById('modal-guest').focus(); return; }
+  const bk = document.getElementById('modal-batch').value;
+  const id = 'ep_' + Date.now();
+  const arr = EPISODES[bk];
+  const ep = {
+    id, num: arr.length + 1,
+    guest,
+    note: document.getElementById('modal-note').value.trim(),
+    airDate: document.getElementById('modal-air').value || null,
+    editDeadline: document.getElementById('modal-deadline').value || null,
+    editor: document.getElementById('modal-editor').value,
+    status: 'Not Started', clips: false, epNotes: '', links: {}
+  };
+  arr.push(ep);
+  EP_INDEX[id] = { batchKey: bk, ep };
+  renderBatch(bk);
+  applyFilters(); updateStats(); updateBatchProgress();
+  closeAddModal();
+  upsertEpisode(ep);
+  showToast(`${guest} added`, 'success');
+  pingSlackUpdate(ep, 'status', '', 'Not Started — New Episode Added');
+}
+
+function deleteEpisode(id, bk) {
+  const entry = EP_INDEX[id]; if (!entry) return;
+  const ep = entry.ep;
+  if (!confirm(`Delete "${ep.guest}"? This cannot be undone.`)) return;
+  const arr = EPISODES[bk];
+  const idx = arr.findIndex(e => e.id === id);
+  if (idx >= 0) arr.splice(idx, 1);
+  delete EP_INDEX[id];
+  // Renumber
+  arr.forEach((e, i) => e.num = i + 1);
+  renderBatch(bk);
+  applyFilters(); updateStats(); updateBatchProgress();
+  // Remove from Supabase
+  if (db) db.from('wsc_episodes').delete().eq('id', id).then(() => {});
+  showToast(`${ep.guest} removed`, 'info');
+}
+
 initSupabase();
 </script>
+
+<!-- ADD EPISODE MODAL -->
+<div class="modal-overlay hidden" id="add-ep-modal" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal-box">
+    <div class="modal-title">Add Episode</div>
+    <div class="modal-field">
+      <div class="modal-label">Guest Name</div>
+      <input class="modal-input" id="modal-guest" placeholder="e.g. Beyoncé" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Note (optional)</div>
+      <input class="modal-input" id="modal-note" placeholder="e.g. Part 1, Black Music Month" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Air Date</div>
+      <input class="modal-input" id="modal-air" type="date" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Edit Deadline</div>
+      <input class="modal-input" id="modal-deadline" type="date" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Editor</div>
+      <select class="modal-input modal-select" id="modal-editor">
+        <option value="Not-Assigned">Not Assigned</option>
+        <option value="Hyyer Creative">Hyyer Creative</option>
+        <option value="Lamont Baldwin">Lamont Baldwin</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Batch</div>
+      <select class="modal-input modal-select" id="modal-batch">
+        <option value="rush">Immediate Priorities</option>
+        <option value="batch2">Batch 2</option>
+        <option value="batch3">Batch 3</option>
+        <option value="batch4">Batch 4</option>
+        <option value="batch5">Batch 5</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAddModal()">Cancel</button>
+      <button class="modal-save" onclick="saveNewEpisode()">Add Episode</button>
+    </div>
+  </div>
+</div>
 
 <!-- AI CHAT BOT -->
 <div class="chat-backdrop" id="chat-backdrop" onclick="toggleChat()"></div>
