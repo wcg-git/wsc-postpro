@@ -570,7 +570,7 @@
     </div>
     <div class="batch-body" id="body-rush">
       <table class="ep-table">
-        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>V1 Pass Deadline</th><th>Final Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-rush"></tbody>
         <tbody><tr id="add-row-rush"><td colspan="10"></td></tr></tbody>
       </table>
@@ -594,7 +594,7 @@
     </div>
     <div class="batch-body" id="body-batch2">
       <table class="ep-table">
-        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>V1 Pass Deadline</th><th>Final Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch2"></tbody>
         <tbody><tr id="add-row-batch2"><td colspan="10"></td></tr></tbody>
       </table>
@@ -618,7 +618,7 @@
     </div>
     <div class="batch-body" id="body-batch3">
       <table class="ep-table">
-        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>V1 Pass Deadline</th><th>Final Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch3"></tbody>
         <tbody><tr id="add-row-batch3"><td colspan="10"></td></tr></tbody>
       </table>
@@ -642,7 +642,7 @@
     </div>
     <div class="batch-body" id="body-batch4">
       <table class="ep-table">
-        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>V1 Pass Deadline</th><th>Final Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch4"></tbody>
         <tbody><tr id="add-row-batch4"><td colspan="10"></td></tr></tbody>
       </table>
@@ -664,7 +664,7 @@
     </div>
     <div class="batch-body" id="body-batch5">
       <table class="ep-table">
-        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>Edit Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
+        <thead><tr><th style="width:52px">#</th><th>Episode / Guest</th><th>Air Date</th><th>V1 Pass Deadline</th><th>Final Deadline</th><th>Days Left</th><th>Editor</th><th>Status</th><th>Clips</th><th>Links</th><th>Notes</th></tr></thead>
         <tbody id="rows-batch5"></tbody>
         <tbody><tr id="add-row-batch5"><td colspan="10"></td></tr></tbody>
       </table>
@@ -733,7 +733,7 @@ function pingSlackUpdate(ep, field, oldVal, newVal) {
   if (!SLACK_UPDATES) return;
   const fieldLabels = {
     editor: 'Editor', status: 'Status', clips: 'Clips',
-    epNotes: 'Notes', airDate: 'Air Date', editDeadline: 'Edit Deadline', batch: 'Batch'
+    epNotes: 'Notes', airDate: 'Air Date', v1Deadline: 'V1 Pass Deadline', editDeadline: 'Final Deadline', batch: 'Batch'
   };
   const label = fieldLabels[field] || field;
   const batchLabel = EP_INDEX[ep.id]?.batchKey?.replace('batch', 'Batch ').replace('rush', 'Immediate Priorities') || '';
@@ -766,6 +766,7 @@ async function initSupabase() {
         ep.clips   = row.clips    ?? ep.clips;
         ep.epNotes = row.ep_notes ?? ep.epNotes;
         if (row.air_date)      ep.airDate      = row.air_date;
+        if (row.v1_deadline)   ep.v1Deadline   = row.v1_deadline;
         if (row.edit_deadline) ep.editDeadline = row.edit_deadline;
         try { ep.links = row.asset_links ? JSON.parse(row.asset_links) : {}; } catch(e) { ep.links = {}; }
         if (row.ep_index !== null && row.ep_index !== undefined) ep.epIndex = row.ep_index;
@@ -831,6 +832,7 @@ async function upsertEpisode(ep) {
     editor: ep.editor, status: ep.status, clips: ep.clips,
     ep_notes: ep.epNotes, asset_links: JSON.stringify(ep.links || {}),
     air_date: ep.airDate || null,
+    v1_deadline: ep.v1Deadline || null,
     edit_deadline: ep.editDeadline || null,
     ep_index: ep.epIndex ?? 0,
     updated_at: new Date().toISOString(),
@@ -874,7 +876,10 @@ function renderRow(ep, batchKey) {
     <td class="date-cell" data-label="Air Date">
       <span class="date-val date-editable" onclick="editDate('${ep.id}','airDate',this)" title="Click to edit">${formatDate(ep.airDate)}</span>
     </td>
-    <td class="date-cell" data-label="Deadline">
+    <td class="date-cell" data-label="V1 Pass">
+      <span class="date-val date-editable" onclick="editDate('${ep.id}','v1Deadline',this)" title="Click to edit">${ep.v1Deadline ? formatDate(ep.v1Deadline) : '<span style=\"color:var(--text-dim)\">—</span>'}</span>
+    </td>
+    <td class="date-cell" data-label="Final">
       <span class="${days!==null&&days<0?'date-past':'date-val'} date-editable" onclick="editDate('${ep.id}','editDeadline',this)" title="Click to edit">${formatDate(ep.editDeadline)}</span>
     </td>
     <td data-label="Days Left">${daysChip(days, ep.status)}</td>
