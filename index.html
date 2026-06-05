@@ -498,7 +498,7 @@
 
 <!-- STATS BAR -->
 <div class="stats-bar">
-  <div class="stat-item"><div class="stat-value sv-default" id="stat-total">18</div><div class="stat-label">Total Episodes</div></div>
+  <div class="stat-item"><div class="stat-value sv-default" id="stat-total">—</div><div class="stat-label">Total Episodes</div></div>
   <div class="stat-item"><div class="stat-value sv-green"   id="stat-delivered">—</div><div class="stat-label">Delivered</div></div>
   <div class="stat-item"><div class="stat-value sv-teal"    id="stat-inprog">—</div><div class="stat-label">In Progress</div></div>
   <div class="stat-item"><div class="stat-value sv-orange"  id="stat-review">—</div><div class="stat-label">In Review</div></div>
@@ -759,7 +759,30 @@ async function initSupabase() {
     if (error) throw error;
     if (data && data.length) {
       data.forEach(row => {
-        const entry = EP_INDEX[row.id]; if (!entry) return;
+        if (!row.id || !row.batch) return;
+        let entry = EP_INDEX[row.id];
+
+        // Dynamically added episodes not in EPISODE_DEFS
+        if (!entry) {
+          if (!EPISODES[row.batch]) return;
+          const newEp = {
+            id: row.id, num: row.ep_index ?? 0,
+            guest: row.guest || 'Unknown',
+            note: row.note || '',
+            airDate: row.air_date || null,
+            v1Deadline: row.v1_deadline || null,
+            editDeadline: row.edit_deadline || null,
+            editor: row.editor || 'Not-Assigned',
+            status: row.status || 'Not Started',
+            clips: row.clips || false,
+            epNotes: row.ep_notes || '',
+            links: (() => { try { return row.asset_links ? JSON.parse(row.asset_links) : {}; } catch(e) { return {}; } })(),
+            epIndex: row.ep_index ?? 999,
+          };
+          EPISODES[row.batch].push(newEp);
+          EP_INDEX[row.id] = { batchKey: row.batch, ep: newEp };
+          return;
+        }
         const ep = entry.ep;
         ep.editor  = row.editor   ?? ep.editor;
         ep.status  = row.status   ?? ep.status;
@@ -829,6 +852,7 @@ async function upsertEpisode(ep) {
   setSyncDot('syncing');
   const { error } = await db.from(TABLE).upsert({
     id: ep.id, batch: EP_INDEX[ep.id]?.batchKey,
+    guest: ep.guest, note: ep.note || '',
     editor: ep.editor, status: ep.status, clips: ep.clips,
     ep_notes: ep.epNotes, asset_links: JSON.stringify(ep.links || {}),
     air_date: ep.airDate || null,
@@ -998,6 +1022,7 @@ function updateField(id, field, value) {
 
 function updateStats() {
   const all = Object.values(EPISODES).flat();
+  set('stat-total', all.length);
   set('stat-delivered',  all.filter(e => e.status==='Delivered').length);
   set('stat-inprog',     all.filter(e => e.status==='In Progress'||e.status==='Rough Cut').length);
   set('stat-review',     all.filter(e => e.status==='In Review'||e.status==='Host Review').length);
