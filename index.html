@@ -697,8 +697,6 @@ const EPISODE_DEFS = {
     { id:'b3e2', num:1, guest:'LA Reid (Part 1)', note:'Black Music Month Kick Off', airDate:'2026-06-01', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
     { id:'b3e3', num:2, guest:'LA Reid (Part 2)', note:'Black Music Month', airDate:'2026-06-04', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
     { id:'b3e4', num:3, guest:'Tricky Stewart', note:'Black Music Month', airDate:'2026-06-11', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b4e4', num:4, guest:'Keri Hilson', note:'', airDate:'2026-06-18', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
-    { id:'b4e2', num:5, guest:'Omarion', note:'', airDate:'2026-06-25', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
   ],
   batch4: [
     { id:'b4e4', num:1, guest:'Keri Hilson', note:'', airDate:'2026-06-18', editDeadline:'2026-05-21', editor:'Not-Assigned', status:'Not Started', clips:false, epNotes:'', links:{} },
@@ -731,6 +729,7 @@ const TABLE    = 'wsc_episodes';
 const SLACK_WEBHOOK = ['https://hooks.slack.com/services','T06CTB9USQN','B0ATEGHPJ74','i5wA9xG1i5TtZp4olyk4jV2z'].join('/');
 const SLACK_UPDATES = ['https://hooks.slack.com/services','T06CTB9USQN','B0ATW8LBRL3','6CVrvNqJ7ax6UvMeN0GyZYnl'].join('/');
 let db = null;
+let isInitializing = true;
 
 function pingSlackUpdate(ep, field, oldVal, newVal) {
   if (!SLACK_UPDATES) return;
@@ -812,6 +811,7 @@ async function initSupabase() {
     });
     setSyncStatus('connected','Live sync on');
     hideLoading(); renderAll(); subscribeRealtime();
+    isInitializing = false;
   } catch (err) {
     console.error('Supabase error:', err);
     setSyncStatus('error','Sync error — local mode');
@@ -851,7 +851,7 @@ function subscribeRealtime() {
 }
 
 async function upsertEpisode(ep) {
-  if (!db) return;
+  if (!db || isInitializing) return;
   setSyncDot('syncing');
   const { error } = await db.from(TABLE).upsert({
     id: ep.id, batch: EP_INDEX[ep.id]?.batchKey,
